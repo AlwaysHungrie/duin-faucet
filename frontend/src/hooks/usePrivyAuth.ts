@@ -1,6 +1,7 @@
 import { useEffect, useState, useCallback } from 'react'
 import { ConnectedWallet, usePrivy, useWallets } from '@privy-io/react-auth'
 import { formatAddress } from '@/utils/formatting'
+import axios from 'axios'
 
 /**
  * Custom hook for managing Privy authentication in a Next.js application
@@ -19,6 +20,7 @@ const usePrivyAuth = () => {
     connectWallet,
     linkWallet,
     unlinkWallet,
+    getAccessToken,
   } = usePrivy()
 
   const { wallets } = useWallets()
@@ -38,6 +40,15 @@ const usePrivyAuth = () => {
   )
   const [walletAddress, setWalletAddress] = useState('')
   const [connectionError, setConnectionError] = useState<string | null>(null)
+
+  const [jwtToken, setJwtToken] = useState<string | null>(null)
+
+  useEffect(() => {
+    const token = localStorage.getItem('jwtToken')
+    if (token) {
+      setJwtToken(token)
+    }
+  }, [])
 
   // Update the loading state based on Privy's ready status
   useEffect(() => {
@@ -120,6 +131,8 @@ const usePrivyAuth = () => {
   const handleLogout = useCallback(async () => {
     try {
       await logout()
+      localStorage.removeItem('jwtToken')
+      setJwtToken(null)
       return true
     } catch (error) {
       console.error('Failed to logout:', error)
@@ -131,6 +144,30 @@ const usePrivyAuth = () => {
       return false
     }
   }, [logout])
+
+  const getJwtToken = useCallback(async (address: string) => {
+    console.log('getting jwt token', address)
+    const privyToken = await getAccessToken()
+    const response = await axios.get(`${process.env.NEXT_PUBLIC_BACKEND_URL}/auth/token`, {
+      params: {
+        address,
+      },
+      headers: {
+        Authorization: `Bearer ${privyToken}`,
+      },
+    })
+    localStorage.setItem('jwtToken', response.data.token)
+    setJwtToken(response.data.token)
+  }, [getAccessToken])
+
+  useEffect(() => {
+    if (jwtToken) {
+      return
+    }
+    if (authenticated && user && user.wallet) {
+      getJwtToken(user.wallet.address)
+    }
+  }, [user, authenticated, getJwtToken, jwtToken])
 
   return {
     // Status
@@ -159,6 +196,9 @@ const usePrivyAuth = () => {
 
     // Raw Privy access (for advanced use cases)
     privyReady: ready,
+
+    // JWT token
+    jwtToken,
   }
 }
 

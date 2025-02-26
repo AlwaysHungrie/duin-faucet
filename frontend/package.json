@@ -10,6 +10,7 @@
   },
   "dependencies": {
     "@privy-io/react-auth": "^2.4.5",
+    "axios": "^1.8.1",
     "ethers": "^6.13.5",
     "next": "15.1.7",
     "react": "^19.0.0",

@@ -6,18 +6,21 @@ import Image from 'next/image'
 import Link from 'next/link'
 import CrystalBall from 'react-crystal-ball'
 import { useMediaQuery } from '@/hooks/useMediaQuery'
+import { useRouter } from 'next/navigation'
 
 const cardClass =
   'mt-auto z-10 w-full max-w-[400px] sm:max-w-[500px] md:max-w-[600px] lg:max-w-[825px] relative aspect-video rounded-3xl lg:rounded-[32px] overflow-hidden cursor-pointer hover:rotate-1 hover:scale-105 transition-all duration-300 group'
 
 export default function Home() {
+  const router = useRouter()
   const { isLoading, authenticatedUser: user, login, logout } = usePrivyAuth()
 
   const isMobile = useMediaQuery('(max-width: 640px)')
   const isTablet = useMediaQuery('(max-width: 768px)')
   const isDesktop = useMediaQuery('(max-width: 1024px)')
+  const isLarge = useMediaQuery('(max-width: 99999px)')
 
-  const orbSize = isMobile ? 60 : isTablet ? 100 : isDesktop ? 120 : 140
+  const orbSize = isMobile ? 60 : isTablet ? 100 : isDesktop ? 120 : isLarge ? 140 : 0
 
   const renderCardContent = () => {
     return (
@@ -33,7 +36,7 @@ export default function Home() {
             <br />
             {CONFIG.COPY.HOME.SUBTITLE_2}
           </p>
-          <div className="mt-2 sm:mt-4 md:mt-6 p-0.5 bg-white/25 rounded-full">
+          <div className="mt-2 sm:mt-4 md:mt-6 p-0.5 bg-white/25 rounded-full opacity-0 animate-fade-in">
             <CrystalBall size={orbSize} colorPalette={1} speed={1.5} />
           </div>
         </div>
@@ -67,21 +70,18 @@ export default function Home() {
           </div>
         </div>
 
-        {!isLoading && user ? (
-          <Link href="/chat" target="_blank" className={cardClass}>
-            {renderCardContent()}
-          </Link>
-        ) : (
-          <div
-            className={cardClass}
-            onClick={() => {
-              login()
-            }}
-          >
-            {renderCardContent()}
-          </div>
-        )}
-
+        <div
+          className={cardClass}
+          onClick={() => {
+            if (!isLoading && user) {
+              router.push('/chat')
+              return
+            }
+            login()
+          }}
+        >
+          {renderCardContent()}
+        </div>
         <div className="absolute bottom-[-60px] sm:bottom-[-80px] md:bottom-[-100px] lg:bottom-[-120px] left-0 w-[442px] sm:w-[600px] md:w-[700px] lg:w-[884px] h-[422px] sm:h-[600px] md:h-[700px] lg:h-[845px] animate-spin-slow-mobile md:animate-spin-slow">
           <Image
             src="/landing/artifact1.svg"
@@ -102,10 +102,7 @@ export default function Home() {
 
         {!isLoading && user ? (
           <div className="z-10 text-sm md:text-base mb-auto mt-4 flex gap-2 items-center opacity-40">
-            <Link
-              href="/chat"
-              className="cursor-pointer hover:opacity-70"
-            >
+            <Link href="/chat" className="cursor-pointer hover:opacity-70">
               Click here to enter
             </Link>
             <span>|</span>
