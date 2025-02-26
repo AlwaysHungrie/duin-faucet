@@ -1,7 +1,7 @@
 'use client'
 
 import { CONFIG } from '@/config'
-import usePrivyAuth from '@/hooks/usePrivyAuth'
+import { usePrivyAuth } from '@/hooks/usePrivyAuth'
 import Image from 'next/image'
 import Link from 'next/link'
 import CrystalBall from 'react-crystal-ball'

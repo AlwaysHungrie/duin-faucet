@@ -1,15 +1,46 @@
-import { useEffect, useState, useCallback } from 'react'
-import { ConnectedWallet, usePrivy, useWallets } from '@privy-io/react-auth'
+import {
+  createContext,
+  useContext,
+  useEffect,
+  useState,
+  useCallback,
+  ReactNode,
+} from 'react'
+import {
+  ConnectedWallet,
+  usePrivy,
+  User,
+  useWallets,
+} from '@privy-io/react-auth'
 import { formatAddress } from '@/utils/formatting'
 import axios from 'axios'
 
-/**
- * Custom hook for managing Privy authentication in a Next.js application
- * Handles loading states, connection status, wallet connection, and disconnection
- *
- * @returns {Object} Authentication state and methods
- */
-const usePrivyAuth = () => {
+// Define the context type
+interface PrivyAuthContextType {
+  isLoading: boolean
+  isAuthenticated: boolean
+  isWalletConnected: boolean
+  authenticatedUser: User | null
+  user: User | null
+  wallets: ConnectedWallet[]
+  currentWallet: ConnectedWallet | null
+  walletAddress: string
+  formattedWalletAddress: string
+  error: string | null
+  login: () => Promise<boolean>
+  logout: () => Promise<boolean>
+  connectWallet: () => Promise<boolean>
+  disconnectWallet: () => Promise<boolean>
+  privyReady: boolean
+  jwtToken: string | null
+  refreshToken: () => Promise<string | null> // Added refreshToken function
+}
+
+// Create the context
+const PrivyAuthContext = createContext<PrivyAuthContextType | null>(null)
+
+// Create the provider component
+export function PrivyAuthProvider({ children }: { children: ReactNode }) {
   // Get Privy's built-in hooks and methods
   const {
     ready,
@@ -18,20 +49,10 @@ const usePrivyAuth = () => {
     login,
     logout,
     connectWallet,
-    linkWallet,
-    unlinkWallet,
     getAccessToken,
   } = usePrivy()
 
   const { wallets } = useWallets()
-
-  const disconnectWallet = useCallback(
-    async (walletId: string) => {
-      console.log('disconnecting wallet', walletId)
-      await logout()
-    },
-    [logout]
-  )
 
   // Additional state for derived values and enhanced UX
   const [isLoading, setIsLoading] = useState(true)
@@ -40,15 +61,25 @@ const usePrivyAuth = () => {
   )
   const [walletAddress, setWalletAddress] = useState('')
   const [connectionError, setConnectionError] = useState<string | null>(null)
-
   const [jwtToken, setJwtToken] = useState<string | null>(null)
 
+  // Initialize token from localStorage on component mount
   useEffect(() => {
-    const token = localStorage.getItem('jwtToken')
-    if (token) {
-      setJwtToken(token)
+    if (!authenticated || !user) return
+    const storedToken = localStorage.getItem('jwtToken')
+    if (storedToken) {
+      console.log('Initializing token from localStorage')
+      setJwtToken(storedToken)
     }
-  }, [])
+  }, [authenticated, user])
+
+  const disconnectWallet = useCallback(
+    async (walletId: string) => {
+      console.log('disconnecting wallet', walletId)
+      await logout()
+    },
+    [logout]
+  )
 
   // Update the loading state based on Privy's ready status
   useEffect(() => {
@@ -145,61 +176,96 @@ const usePrivyAuth = () => {
     }
   }, [logout])
 
-  const getJwtToken = useCallback(async (address: string) => {
-    console.log('getting jwt token', address)
-    const privyToken = await getAccessToken()
-    const response = await axios.get(`${process.env.NEXT_PUBLIC_BACKEND_URL}/auth/token`, {
-      params: {
-        address,
-      },
-      headers: {
-        Authorization: `Bearer ${privyToken}`,
-      },
-    })
-    localStorage.setItem('jwtToken', response.data.token)
-    setJwtToken(response.data.token)
-  }, [getAccessToken])
+  // Improved getJwtToken function
+  const getJwtToken = useCallback(
+    async (address: string): Promise<string | null> => {
+      try {
+        console.log('Getting JWT token for address:', address)
+        const privyToken = await getAccessToken()
 
-  useEffect(() => {
-    if (jwtToken) {
-      return
-    }
+        const response = await axios.get(
+          `${process.env.NEXT_PUBLIC_BACKEND_URL}/auth/token`,
+          {
+            params: { address },
+            headers: { Authorization: `Bearer ${privyToken}` },
+          }
+        )
+
+        const tokenData = response.data.token
+        console.log('Received new JWT token')
+
+        // Force a new reference to trigger renders
+        localStorage.setItem('jwtToken', tokenData)
+
+        // Important: Use a function updater to ensure we're always using the latest state
+        setJwtToken(() => tokenData)
+
+        return tokenData
+      } catch (error) {
+        console.error('Error getting JWT token:', error)
+        return null
+      }
+    },
+    [getAccessToken]
+  )
+
+  // Added a public refresh token method that components can call
+  const refreshToken = useCallback(async (): Promise<string | null> => {
     if (authenticated && user && user.wallet) {
-      getJwtToken(user.wallet.address)
+      return getJwtToken(user.wallet.address)
     }
-  }, [user, authenticated, getJwtToken, jwtToken])
+    return null
+  }, [authenticated, user, getJwtToken])
 
-  return {
-    // Status
+  // Get token on auth changes
+  useEffect(() => {
+    const fetchTokenIfNeeded = async () => {
+      // Only fetch if authenticated and we have wallet info
+      if (authenticated && user && user.wallet) {
+        // Check if we need a token (no token or force refresh)
+        if (!jwtToken) {
+          console.log('No token available, fetching new one')
+          await getJwtToken(user.wallet.address)
+        }
+      }
+    }
+
+    fetchTokenIfNeeded()
+  }, [authenticated, user, getJwtToken, jwtToken])
+
+  // Create the context value with all the state and methods
+  const value: PrivyAuthContextType = {
     isLoading,
     isAuthenticated: authenticated,
     isWalletConnected: !!currentWallet,
-
-    // User and wallet data
-    authenticatedUser: authenticated && user,
+    authenticatedUser: authenticated && user ? user : null,
     user,
     wallets,
     currentWallet,
     walletAddress,
     formattedWalletAddress: formatAddress(walletAddress),
-
-    // Error state
     error: connectionError,
-
-    // Actions
     login: handleLogin,
     logout: handleLogout,
     connectWallet: handleConnectWallet,
     disconnectWallet: handleDisconnectWallet,
-    linkWallet,
-    unlinkWallet,
-
-    // Raw Privy access (for advanced use cases)
     privyReady: ready,
-
-    // JWT token
     jwtToken,
+    refreshToken, // Added refreshToken function to the context
   }
+
+  return (
+    <PrivyAuthContext.Provider value={value}>
+      {children}
+    </PrivyAuthContext.Provider>
+  )
 }
 
-export default usePrivyAuth
+// Create the custom hook to use the context
+export function usePrivyAuth() {
+  const context = useContext(PrivyAuthContext)
+  if (!context) {
+    throw new Error('usePrivyAuth must be used within a PrivyAuthProvider')
+  }
+  return context
+}
