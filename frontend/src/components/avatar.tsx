@@ -42,9 +42,9 @@ export default function Avatar({
       style={{ height, width }}
     >
       {!address ? (
-        <Image src="/favicon.svg" alt="avatar" fill className="animate-rotate" />
+        <Image src="/favicon.svg" alt="avatar" fill />
       ) : (
-        <div style={{ background: gradient }} className="h-full w-full animate-rotate" />
+        <div style={{ background: gradient }} className="h-full w-full" />
       )}
     </div>
   )

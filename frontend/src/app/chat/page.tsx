@@ -1,15 +1,20 @@
 'use client'
+import ChatArea from '@/components/chat/chatArea'
 import ChatList from '@/components/chat/chatList'
 import { Message } from '@/components/chat/types'
 import { Chat } from '@/components/chat/types'
 import ChatLandingScreen from '@/components/ChatLandingScreen'
 import { usePrivyAuth } from '@/hooks/usePrivyAuth'
 import { useChatStore } from '@/providers/chat'
-import { useCallback, useEffect } from 'react'
+import { useCallback, useEffect, useMemo } from 'react'
 
 export default function ChatHome() {
   const { jwtToken } = usePrivyAuth()
   const { chats, activeChat, setActiveChat, setChats } = useChatStore()
+
+  const currentChat = useMemo(() => {
+    return chats.find((chat: Chat) => chat.chatId === activeChat)
+  }, [chats, activeChat])
 
   const getChats = useCallback(async (jwtToken: string) => {
     const response = await fetch(
@@ -54,6 +59,21 @@ export default function ChatHome() {
         />
 
         {!activeChat && <ChatLandingScreen isMobile={false} />}
+
+        {currentChat && (
+          <ChatArea
+            chat={currentChat}
+            isMobile={false}
+            isTyping={false}
+            isLoadingMore={false}
+            hasMoreMessages={false}
+            onBackClick={() => setActiveChat('')}
+            onSendMessage={() => {}}
+            onLoadMoreMessages={() => {}}
+            inputMessage={''}
+            setInputMessage={() => {}}
+          />
+        )}
       </div>
     </div>
   )
