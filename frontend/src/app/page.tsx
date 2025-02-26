@@ -1,101 +1,135 @@
-import Image from "next/image";
+'use client'
+
+import { CONFIG } from '@/config'
+import usePrivyAuth from '@/hooks/usePrivyAuth'
+import Image from 'next/image'
+import Link from 'next/link'
+import CrystalBall from 'react-crystal-ball'
+import { useMediaQuery } from '@/hooks/useMediaQuery'
+
+const cardClass =
+  'mt-auto z-10 w-full max-w-[400px] sm:max-w-[500px] md:max-w-[600px] lg:max-w-[825px] relative aspect-video rounded-3xl lg:rounded-[32px] overflow-hidden cursor-pointer hover:rotate-1 hover:scale-105 transition-all duration-300 group'
 
 export default function Home() {
-  return (
-    <div className="grid grid-rows-[20px_1fr_20px] items-center justify-items-center min-h-screen p-8 pb-20 gap-16 sm:p-20 font-[family-name:var(--font-geist-sans)]">
-      <main className="flex flex-col gap-8 row-start-2 items-center sm:items-start">
-        <Image
-          className="dark:invert"
-          src="/next.svg"
-          alt="Next.js logo"
-          width={180}
-          height={38}
-          priority
-        />
-        <ol className="list-inside list-decimal text-sm text-center sm:text-left font-[family-name:var(--font-geist-mono)]">
-          <li className="mb-2">
-            Get started by editing{" "}
-            <code className="bg-black/[.05] dark:bg-white/[.06] px-1 py-0.5 rounded font-semibold">
-              src/app/page.tsx
-            </code>
-            .
-          </li>
-          <li>Save and see your changes instantly.</li>
-        </ol>
+  const { isLoading, authenticatedUser: user, login, logout } = usePrivyAuth()
 
-        <div className="flex gap-4 items-center flex-col sm:flex-row">
-          <a
-            className="rounded-full border border-solid border-transparent transition-colors flex items-center justify-center bg-foreground text-background gap-2 hover:bg-[#383838] dark:hover:bg-[#ccc] text-sm sm:text-base h-10 sm:h-12 px-4 sm:px-5"
-            href="https://vercel.com/new?utm_source=create-next-app&utm_medium=appdir-template-tw&utm_campaign=create-next-app"
-            target="_blank"
-            rel="noopener noreferrer"
-          >
-            <Image
-              className="dark:invert"
-              src="/vercel.svg"
-              alt="Vercel logomark"
-              width={20}
-              height={20}
-            />
-            Deploy now
-          </a>
-          <a
-            className="rounded-full border border-solid border-black/[.08] dark:border-white/[.145] transition-colors flex items-center justify-center hover:bg-[#f2f2f2] dark:hover:bg-[#1a1a1a] hover:border-transparent text-sm sm:text-base h-10 sm:h-12 px-4 sm:px-5 sm:min-w-44"
-            href="https://nextjs.org/docs?utm_source=create-next-app&utm_medium=appdir-template-tw&utm_campaign=create-next-app"
-            target="_blank"
-            rel="noopener noreferrer"
-          >
-            Read our docs
-          </a>
+  const isMobile = useMediaQuery('(max-width: 640px)')
+  const isTablet = useMediaQuery('(max-width: 768px)')
+  const isDesktop = useMediaQuery('(max-width: 1024px)')
+
+  const orbSize = isMobile ? 60 : isTablet ? 100 : isDesktop ? 120 : 140
+
+  const renderCardContent = () => {
+    return (
+      <>
+        <Image src="/heroCard.svg" alt="hero" fill className="object-cover" />
+        <div className="h-full w-full bg-gradient-to-b from-transparent to-black/30 absolute top-0 left-0" />
+        <div className="absolute bottom-0 left-0 w-full h-full flex flex-col items-center justify-center p-4 text-center">
+          <h1 className="text-5xl sm:text-6xl md:text-7xl lg:text-[128px] leading-tight sm:leading-tight md:leading-tight lg:leading-[164px] font-semibold text-white">
+            {CONFIG.COPY.HOME.TITLE}
+          </h1>
+          <p className="text-sm sm:text-lg md:text-xl lg:text-[24px] leading-snug sm:leading-snug md:leading-snug lg:leading-[28px] text-white">
+            {CONFIG.COPY.HOME.SUBTITLE}
+            <br />
+            {CONFIG.COPY.HOME.SUBTITLE_2}
+          </p>
+          <div className="mt-2 sm:mt-4 md:mt-6 p-0.5 bg-white/25 rounded-full">
+            <CrystalBall size={orbSize} colorPalette={1} speed={1.5} />
+          </div>
         </div>
-      </main>
-      <footer className="row-start-3 flex gap-6 flex-wrap items-center justify-center">
-        <a
-          className="flex items-center gap-2 hover:underline hover:underline-offset-4"
-          href="https://nextjs.org/learn?utm_source=create-next-app&utm_medium=appdir-template-tw&utm_campaign=create-next-app"
-          target="_blank"
-          rel="noopener noreferrer"
-        >
+      </>
+    )
+  }
+
+  return (
+    <div className="bg-homeBg font-redditSans">
+      <div className="flex flex-col items-center h-dvh p-4 overflow-hidden w-screen relative">
+        <div className="flex w-full z-10 pt-2">
+          <div className="flex items-center gap-2 ml-auto pr-2">
+            <Link href={CONFIG.TELEGRAM_URL} target="_blank">
+              <Image
+                src="/telegram-blue.svg"
+                alt="telegram"
+                height={32}
+                width={32}
+                className="opacity-80 hover:opacity-100"
+              />
+            </Link>
+            <Link href={CONFIG.X_URL} target="_blank">
+              <Image
+                src="/twitter.svg"
+                alt="x"
+                height={32}
+                width={32}
+                className="opacity-70 hover:opacity-100"
+              />
+            </Link>
+          </div>
+        </div>
+
+        {!isLoading && user ? (
+          <Link href="/chat" target="_blank" className={cardClass}>
+            {renderCardContent()}
+          </Link>
+        ) : (
+          <div
+            className={cardClass}
+            onClick={() => {
+              login()
+            }}
+          >
+            {renderCardContent()}
+          </div>
+        )}
+
+        <div className="absolute bottom-[-60px] sm:bottom-[-80px] md:bottom-[-100px] lg:bottom-[-120px] left-0 w-[442px] sm:w-[600px] md:w-[700px] lg:w-[884px] h-[422px] sm:h-[600px] md:h-[700px] lg:h-[845px] animate-spin-slow-mobile md:animate-spin-slow">
           <Image
-            aria-hidden
-            src="/file.svg"
-            alt="File icon"
-            width={16}
-            height={16}
+            src="/landing/artifact1.svg"
+            alt="decorative artifact"
+            fill
+            className="object-contain"
           />
-          Learn
-        </a>
-        <a
-          className="flex items-center gap-2 hover:underline hover:underline-offset-4"
-          href="https://vercel.com/templates?framework=next.js&utm_source=create-next-app&utm_medium=appdir-template-tw&utm_campaign=create-next-app"
-          target="_blank"
-          rel="noopener noreferrer"
-        >
+        </div>
+
+        <div className="absolute top-[-60px] sm:top-[-80px] md:top-[-100px] lg:top-[-120px] right-[-270px] sm:right-[-360px] md:right-[-450px] lg:right-[-540px] w-[398px] sm:w-[500px] md:w-[650px] lg:w-[796px] h-[614px] sm:h-[800px] md:h-[1000px] lg:h-[1229px] animate-bounce-slow-mobile md:animate-bounce-slow ">
           <Image
-            aria-hidden
-            src="/window.svg"
-            alt="Window icon"
-            width={16}
-            height={16}
+            src="/landing/artifact2.svg"
+            alt="decorative artifact"
+            fill
+            className="object-contain"
           />
-          Examples
-        </a>
-        <a
-          className="flex items-center gap-2 hover:underline hover:underline-offset-4"
-          href="https://nextjs.org?utm_source=create-next-app&utm_medium=appdir-template-tw&utm_campaign=create-next-app"
-          target="_blank"
-          rel="noopener noreferrer"
-        >
-          <Image
-            aria-hidden
-            src="/globe.svg"
-            alt="Globe icon"
-            width={16}
-            height={16}
-          />
-          Go to nextjs.org →
-        </a>
-      </footer>
+        </div>
+
+        {!isLoading && user ? (
+          <div className="z-10 text-sm md:text-base mb-auto mt-4 flex gap-2 items-center opacity-40">
+            <Link
+              href="/chat"
+              className="cursor-pointer hover:opacity-70"
+            >
+              Click here to enter
+            </Link>
+            <span>|</span>
+            <div
+              className="cursor-pointer hover:opacity-70"
+              onClick={() => {
+                logout()
+              }}
+            >
+              Disconnect wallet
+            </div>
+          </div>
+        ) : (
+          <div
+            onClick={() => {
+              if (isLoading) return
+              login()
+            }}
+            className="z-10 text-sm md:text-base mb-auto mt-4 cursor-pointer opacity-40 hover:opacity-70"
+          >
+            {isLoading ? 'Loading...' : 'Connect your wallet to enter'}
+          </div>
+        )}
+      </div>
     </div>
-  );
+  )
 }
