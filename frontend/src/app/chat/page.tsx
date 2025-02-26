@@ -2,6 +2,7 @@
 import ChatList from '@/components/chat/chatList'
 import { Message } from '@/components/chat/types'
 import { Chat } from '@/components/chat/types'
+import ChatLandingScreen from '@/components/ChatLandingScreen'
 import { usePrivyAuth } from '@/hooks/usePrivyAuth'
 import { useChatStore } from '@/providers/chat'
 import { useCallback, useEffect } from 'react'
@@ -51,6 +52,8 @@ export default function ChatHome() {
           onChatSelect={(chatId: string) => setActiveChat(chatId)}
           clearChats={() => setChats([])}
         />
+
+        {!activeChat && <ChatLandingScreen isMobile={false} />}
       </div>
     </div>
   )

@@ -1,6 +1,10 @@
 import CrystalBall from 'react-crystal-ball'
 import { Chat } from './types'
 
+const formatChatName = (name: string) => {
+  return name.charAt(0).toUpperCase() + name.slice(1)
+}
+
 export default function ChatItem({
   chat,
   isActive,
@@ -20,7 +24,7 @@ export default function ChatItem({
       <div className="flex items-center w-full">
         <div className="flex-1 min-w-0">
           <div className="flex justify-between items-baseline">
-            <span className="font-medium truncate">{chat.name}</span>
+            <span className="font-medium truncate">{formatChatName(chat.name)}</span>
           </div>
 
           <div className="flex justify-between items-center">
