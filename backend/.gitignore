@@ -1,0 +1,16 @@
+/node_modules
+/dist
+/build
+/coverage
+/logs
+/tmp
+/pids
+/sessions
+
+
+.env
+.env.local
+.env.development
+.env.production
+.env.test
+.env.test.local
