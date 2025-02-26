@@ -1,7 +1,7 @@
 import CrystalBall from 'react-crystal-ball'
 import { Chat } from './types'
 
-const formatChatName = (name: string) => {
+export const formatChatName = (name: string) => {
   return name.charAt(0).toUpperCase() + name.slice(1)
 }
 

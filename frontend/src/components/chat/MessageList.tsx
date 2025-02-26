@@ -4,7 +4,6 @@ import { Message } from './types'
 
 export default function MessageList({
   messages,
-  isGroup,
   isTyping,
   isLoadingMore,
   hasMoreMessages,
@@ -13,7 +12,6 @@ export default function MessageList({
   onScroll,
 }: {
   messages: Message[]
-  isGroup: boolean
   isTyping: boolean
   isLoadingMore: boolean
   hasMoreMessages: boolean
@@ -58,26 +56,21 @@ export default function MessageList({
         </div>
       )}
 
-      {messages.map((message, index) => (
-        <MessageItem
-          key={message.id}
-          message={message}
-          isGroup={isGroup}
-          previousMessage={index > 0 ? messages[index - 1] : null}
-        />
+      {messages.map((message) => (
+        <MessageItem key={message.id} message={message} />
       ))}
 
       {isTyping && (
         <div className="flex justify-start mb-4">
-          <div className="bg-white p-3 rounded-lg shadow-sm">
+          <div className="bg-white pt-3 pb-2.5 px-3 rounded-lg shadow-sm">
             <div className="flex items-center gap-1">
-              <div className="h-2 w-2 bg-gray-400 rounded-full animate-bounce"></div>
+              <div className="h-1.5 w-1.5 bg-gray-400 rounded-full animate-bounce"></div>
               <div
-                className="h-2 w-2 bg-gray-400 rounded-full animate-bounce"
+                className="h-1.5 w-1.5 bg-gray-400 rounded-full animate-bounce"
                 style={{ animationDelay: '0.2s' }}
               ></div>
               <div
-                className="h-2 w-2 bg-gray-400 rounded-full animate-bounce"
+                className="h-1.5 w-1.5 bg-gray-400 rounded-full animate-bounce"
                 style={{ animationDelay: '0.4s' }}
               ></div>
             </div>

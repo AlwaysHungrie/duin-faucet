@@ -1,6 +1,7 @@
 import { Button } from '@/components/ui/button'
-import { Phone, Video, Search, MoreVertical, ArrowLeft } from 'lucide-react'
+import { ArrowLeft, LucideInfo } from 'lucide-react'
 import { Chat } from './types'
+import { formatChatName } from './chatItem'
 
 export default function ChatHeader({
   chat,
@@ -10,7 +11,7 @@ export default function ChatHeader({
   onBackClick: () => void
 }) {
   return (
-    <div className="bg-gray-50 p-3 flex items-center justify-between border-b sticky top-0 z-10">
+    <div className="bg-gray-50 p-3 flex items-center border-b sticky top-0 z-10">
       <div className="flex items-center">
         <Button
           variant="ghost"
@@ -22,24 +23,15 @@ export default function ChatHeader({
         </Button>
 
         <div>
-          <h2 className="font-medium">{chat.name}</h2>
+          <h2 className="font-medium">{formatChatName(chat.name)}</h2>
         </div>
       </div>
 
-      <div className="flex items-center">
-        <Button variant="ghost" size="icon" className="hidden sm:flex">
-          <Phone className="h-5 w-5" />
-        </Button>
-        <Button variant="ghost" size="icon" className="hidden sm:flex">
-          <Video className="h-5 w-5" />
-        </Button>
-        <Button variant="ghost" size="icon" className="hidden xs:flex">
-          <Search className="h-5 w-5" />
-        </Button>
-        <Button variant="ghost" size="icon">
-          <MoreVertical className="h-5 w-5" />
-        </Button>
+      <div className="text-sm text-gray-500 ml-auto">
+        {chat.messagesRemaining} / {chat.totalMessagesAllowed}
       </div>
+
+      <LucideInfo className="h-5 w-5 text-gray-400 ml-2" />
     </div>
   )
 }

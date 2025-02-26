@@ -1,17 +1,12 @@
 import { Message } from './types'
 
-export default function MessageItem({
-  message,
-  isGroup,
-  previousMessage,
-}: {
-  message: Message
-  isGroup: boolean
-  previousMessage: Message | null
-}) {
+export const formatMessageTimestamp = (timestamp: string) => {
+  const date = new Date(timestamp)
+  return date.toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })
+}
+
+export default function MessageItem({ message }: { message: Message }) {
   const isUser = message.role === 'user'
-  const showAvatar =
-    !isUser && (!previousMessage || previousMessage.role !== message.role)
 
   return (
     <div className={`flex mb-3 ${isUser ? 'justify-end' : 'justify-start'}`}>
@@ -22,12 +17,6 @@ export default function MessageItem({
             : 'bg-white text-gray-800 rounded-bl-none shadow-sm'
         }`}
       >
-        {!isUser && isGroup && showAvatar && (
-          <div className="text-xs font-medium text-blue-600 mb-1">
-            {message.role}
-          </div>
-        )}
-
         <p className="whitespace-pre-wrap break-words">{message.content}</p>
 
         <div
@@ -36,7 +25,7 @@ export default function MessageItem({
           }`}
         >
           <span className={`${isUser ? 'text-blue-100' : 'text-gray-500'}`}>
-            {message.timestamp}
+            {formatMessageTimestamp(message.timestamp)}
           </span>
         </div>
       </div>

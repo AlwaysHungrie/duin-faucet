@@ -48,8 +48,8 @@ export default function ChatArea({
     }
   }
 
-  const handleSubmit = () => {
-    // e.preventDefault()
+  const handleSubmit = (e: React.FormEvent<HTMLFormElement>) => {
+    e.preventDefault()
     onSendMessage(inputMessage)
   }
 
@@ -63,7 +63,6 @@ export default function ChatArea({
 
       <MessageList
         messages={chat.messages}
-        isGroup={false}
         isTyping={isTyping}
         isLoadingMore={isLoadingMore}
         hasMoreMessages={hasMoreMessages}
@@ -76,6 +75,7 @@ export default function ChatArea({
         value={inputMessage}
         onChange={setInputMessage}
         onSubmit={handleSubmit}
+        disabled={isTyping}
       />
     </div>
   )
