@@ -1,24 +1,22 @@
 import MessageItem from './MessageItem'
 import { Loader } from 'lucide-react'
 import { Message } from './types'
+import { forwardRef } from 'react'
 
-export default function MessageList({
-  messages,
-  isTyping,
-  isLoadingMore,
-  hasMoreMessages,
-  messagesEndRef,
-  messagesContainerRef,
-  onScroll,
-}: {
-  messages: Message[]
-  isTyping: boolean
-  isLoadingMore: boolean
-  hasMoreMessages: boolean
-  messagesEndRef: React.RefObject<HTMLDivElement | null>
-  messagesContainerRef: React.RefObject<HTMLDivElement | null>
-  onScroll: (event: React.UIEvent<HTMLDivElement>) => void
-}) {
+const MessageList = forwardRef<
+  {
+    messagesEnd: HTMLDivElement | null
+    messagesContainer: HTMLDivElement | null
+    isLoadingMore: boolean
+  },
+  {
+    messages: Message[]
+    isTyping: boolean
+    hasMoreMessages: boolean
+    onScroll: (event: React.UIEvent<HTMLDivElement>) => void
+    isLoadingMore: boolean
+  }
+>(({ messages, isTyping, hasMoreMessages, onScroll, isLoadingMore }, ref) => {
   return (
     <div
       className="flex-1 overflow-y-auto p-2 sm:p-4 bg-gray-50"
@@ -28,10 +26,17 @@ export default function MessageList({
         backgroundRepeat: 'repeat',
         backgroundSize: '40px 40px',
       }}
-      ref={messagesContainerRef}
+      ref={(element) => {
+        if (!ref || typeof ref !== 'object') return
+        ref.current = {
+          messagesContainer: element,
+          isLoadingMore: ref.current?.isLoadingMore || false,
+          messagesEnd: ref.current?.messagesEnd || null,
+        }
+      }}
       onScroll={onScroll}
     >
-      {/* {isLoadingMore ? (
+      {/* {ref && typeof ref === 'object' && ref.current?.isLoadingMore ? (
         <div className="flex justify-center mb-4">
           <span className="px-3 py-1 bg-gray-200 rounded-md text-xs flex items-center">
             <Loader className="h-3 w-3 animate-spin mr-2" />
@@ -52,11 +57,17 @@ export default function MessageList({
         </div>
       )} */}
 
-      {hasMoreMessages ? isLoadingMore ? (
+      {isLoadingMore ? (
         <div className="flex justify-center mb-4">
           <span className="px-3 py-1 bg-gray-200 rounded-md text-xs flex items-center">
             <Loader className="h-3 w-3 animate-spin mr-2" />
             Loading previous messages...
+          </span>
+        </div>
+      ) : !hasMoreMessages ? (
+        <div className="flex justify-center mb-4">
+          <span className="text-xs text-gray-500">
+            Beginning of conversation
           </span>
         </div>
       ) : (
@@ -65,29 +76,7 @@ export default function MessageList({
             Scroll up to load more messages
           </span>
         </div>
-      ) : (
-        <div className="flex justify-center mb-4">
-          <span className="text-xs text-gray-500">
-            Beginning of conversation
-          </span>
-        </div>
       )}
-
-      {/* {!isLoadingMore &&
-        (hasMoreMessages ? (
-          <div className="flex justify-center mb-4">
-            <span className="text-xs text-gray-500">
-              Scroll up to load more messages
-            </span>
-          </div>
-        ) : (
-          <div className="flex justify-center mb-4">
-            <span className="text-xs text-gray-500">
-              Beginning of conversation
-            </span>
-          </div>
-        ))
-      } */}
 
       {messages.map((message) => (
         <MessageItem key={message.messageId} message={message} />
@@ -111,7 +100,20 @@ export default function MessageList({
         </div>
       )}
 
-      <div ref={messagesEndRef} />
+      <div
+        ref={(element) => {
+          if (!ref || typeof ref !== 'object') return
+          ref.current = {
+            messagesEnd: element,
+            isLoadingMore: ref.current?.isLoadingMore || false,
+            messagesContainer: ref.current?.messagesContainer || null,
+          }
+        }}
+      />
     </div>
   )
-}
+})
+
+MessageList.displayName = 'MessageList'
+
+export default MessageList

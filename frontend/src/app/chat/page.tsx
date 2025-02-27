@@ -25,10 +25,17 @@ export default function ChatHome() {
   const [isTyping, setIsTyping] = useState(false)
   const [inputMessage, setInputMessage] = useState('')
 
-  const messagesEndRef = useRef<HTMLDivElement>(null)
-  const messagesContainerRef = useRef<HTMLDivElement>(null)
+  const [isLoadingMore, setIsLoadingMore] = useState(false)
 
-  const isLoadingPrev = useRef(false)
+  const ref = useRef<{
+    messagesEnd: HTMLDivElement | null
+    messagesContainer: HTMLDivElement | null
+    isLoadingMore: boolean
+  }>({
+    messagesEnd: null,
+    messagesContainer: null,
+    isLoadingMore: false,
+  })
 
   const currentChat = useMemo(() => {
     return chats.find((chat: Chat) => chat.chatId === activeChat)
@@ -74,16 +81,17 @@ export default function ChatHome() {
   }, [jwtToken, getChats])
 
   const scrollToBottom = useCallback(() => {
-    messagesEndRef.current?.scrollIntoView({ behavior: 'instant' })
+    ref.current.messagesEnd?.scrollIntoView({ behavior: 'instant' })
   }, [])
 
   // Modified: Only scroll to bottom when new messages are added (not when loading previous ones)
   useEffect(() => {
-    if (currentChat && !isLoadingPrev.current) {
+    if (currentChat && !ref.current.isLoadingMore) {
       scrollToBottom()
     } else {
       setTimeout(() => {
-        isLoadingPrev.current = false
+        ref.current.isLoadingMore = false
+        setIsLoadingMore(false)
       }, 100)
     }
   }, [currentChat?.messages?.length, scrollToBottom, currentChat])
@@ -145,11 +153,12 @@ export default function ChatHome() {
     const activeChat = currentChat?.chatId
 
     // Set loading state for previous messages
-    currentChat.isLoadingMore = true
-    isLoadingPrev.current = true
+    // currentChat.isLoadingMore = true
+    ref.current.isLoadingMore = true
+    setIsLoadingMore(true)
 
     // Store the current scroll height before loading new messages
-    const chatContainer = messagesEndRef.current?.parentElement
+    const chatContainer = ref.current.messagesEnd?.parentElement
     const scrollHeightBefore = chatContainer?.scrollHeight || 0
     const scrollPosition = chatContainer?.scrollTop || 0
 
@@ -177,27 +186,22 @@ export default function ChatHome() {
       hasMoreMessagesFromBackend
     )
 
-    await new Promise((resolve) => setTimeout(resolve, 3000))
-
     const pastMessages: Message[] = messages.map((message: Message) => ({
       ...message,
       timestamp: new Date(message.timestamp),
     }))
 
-    // await new Promise((resolve) => setTimeout(resolve, 3000))
+    await new Promise((resolve) => setTimeout(resolve, 1000))
 
     handleAddPreviousMessages(activeChat, pastMessages, hasMoreMessagesFromBackend)
 
-    // After the messages are rendered, adjust scroll position
     setTimeout(() => {
       if (chatContainer) {
         const newScrollHeight = chatContainer.scrollHeight
         const heightDifference = newScrollHeight - scrollHeightBefore
         chatContainer.scrollTop = scrollPosition + heightDifference
       }
-
-      currentChat.isLoadingMore = false
-    }, 100)
+    }, 0)
   }, [
     jwtToken,
     currentChat,
@@ -253,7 +257,6 @@ export default function ChatHome() {
             chat={currentChat}
             isMobile={isMobile}
             isTyping={isTyping}
-            isLoadingMore={isLoadingPrev.current}
             hasMoreMessages={currentChat.hasMoreMessages}
             onBackClick={() => {
               setActiveChat('')
@@ -264,9 +267,10 @@ export default function ChatHome() {
             onLoadMoreMessages={handleLoadMoreMessages}
             inputMessage={inputMessage}
             setInputMessage={setInputMessage}
-            messagesEndRef={messagesEndRef}
-            messagesContainerRef={messagesContainerRef}
+            
+            ref={ref}
             onClearChatClick={handleClearChat}
+            isLoadingMore={isLoadingMore}
           />
         )}
       </div>

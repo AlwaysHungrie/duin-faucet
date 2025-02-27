@@ -1,42 +1,52 @@
+import { forwardRef } from 'react'
 import ChatHeader from './ChatHeader'
 import MessageList from './MessageList'
 import ChatInput from './ChatInput'
 import { Chat } from './types'
 
-export default function ChatArea({
-  chat,
-  isMobile,
-  isTyping,
-  isLoadingMore,
-  hasMoreMessages,
-  onBackClick,
-  onSendMessage,
-  onLoadMoreMessages,
-  inputMessage,
-  setInputMessage,
-  messagesEndRef,
-  messagesContainerRef,
-  onClearChatClick,
-}: {
-  chat: Chat
-  isMobile: boolean
-  isTyping: boolean
-  isLoadingMore: boolean
-  hasMoreMessages: boolean
-  onBackClick: () => void
-  onSendMessage: (message: string) => void
-  onLoadMoreMessages: () => void
-  inputMessage: string
-  setInputMessage: (message: string) => void
-  messagesEndRef: React.RefObject<HTMLDivElement | null>
-  messagesContainerRef: React.RefObject<HTMLDivElement | null>
-  onClearChatClick: () => void
-}) {
+const ChatArea = forwardRef<
+  {
+    messagesEnd: HTMLDivElement | null
+    messagesContainer: HTMLDivElement | null
+    isLoadingMore: boolean
+  },
+  {
+    chat: Chat
+    isMobile: boolean
+    isTyping: boolean
+    hasMoreMessages: boolean
+    onBackClick: () => void
+    onSendMessage: (message: string) => void
+    onLoadMoreMessages: () => void
+    inputMessage: string
+    setInputMessage: (message: string) => void
+    onClearChatClick: () => void
+    isLoadingMore: boolean
+  }
+>(function ChatArea(
+  {
+    chat,
+    isMobile,
+    isTyping,
+    hasMoreMessages,
+    onBackClick,
+    onSendMessage,
+    onLoadMoreMessages,
+    inputMessage,
+    setInputMessage,
+    onClearChatClick,
+    isLoadingMore,
+  },
+  ref
+) {
   const handleScroll = (e: React.UIEvent<HTMLDivElement>) => {
+    if (!ref || typeof ref !== 'object') return
     const { scrollTop } = e.target as HTMLDivElement
 
+    console.log('isLoadingMore', ref?.current?.isLoadingMore)
+
     // Load more messages when scrolled near the top
-    if (scrollTop < 50 && !isLoadingMore && hasMoreMessages) {
+    if (scrollTop < 10 && !ref.current?.isLoadingMore && hasMoreMessages) {
       onLoadMoreMessages()
     }
   }
@@ -61,11 +71,10 @@ export default function ChatArea({
       <MessageList
         messages={chat.messages}
         isTyping={isTyping}
-        isLoadingMore={isLoadingMore}
         hasMoreMessages={hasMoreMessages}
-        messagesEndRef={messagesEndRef}
-        messagesContainerRef={messagesContainerRef}
+        ref={ref}
         onScroll={handleScroll}
+        isLoadingMore={isLoadingMore}
       />
 
       <ChatInput
@@ -76,4 +85,8 @@ export default function ChatArea({
       />
     </div>
   )
-} 
+}) 
+
+ChatArea.displayName = 'ChatArea'
+
+export default ChatArea
