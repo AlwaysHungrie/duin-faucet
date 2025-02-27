@@ -23,3 +23,22 @@ export const getUserById = async (id: string) => {
   })
   return user
 }
+
+export const deleteUser = async (userId: string) => {
+  const chats = await prisma.chat.findMany({
+    where: { userId },
+  })
+
+  const messages = await prisma.message.deleteMany({
+    where: { chatId: { in: chats.map((chat) => chat.chatId) } },
+  })
+
+  console.log('deleted messages', messages)
+  console.log('deleted chats', chats)
+
+  await prisma.chat.deleteMany({
+    where: { userId },
+  })
+
+  // await prisma.user.delete({ where: { id: userId } })
+}

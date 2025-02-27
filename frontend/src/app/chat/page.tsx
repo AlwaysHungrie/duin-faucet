@@ -66,12 +66,12 @@ export default function ChatHome() {
             isLoadingMore: false,
           })) satisfies Chat[]
         )
-        if (!isMobile) {
-          setActiveChat(localStorage.getItem('activeChat') || '')
-        }
+        // if (!isMobile) {
+        //   setActiveChat(localStorage.getItem('activeChat') || '')
+        // }
       }
     },
-    [setChats, setActiveChat, isMobile]
+    [setChats]
   )
 
   useEffect(() => {
@@ -81,7 +81,9 @@ export default function ChatHome() {
   }, [jwtToken, getChats])
 
   const scrollToBottom = useCallback(() => {
-    ref.current.messagesEnd?.scrollIntoView({ behavior: 'instant' })
+    ref.current.messagesEnd?.scrollIntoView({
+      behavior: ref.current.isLoadingMore ? 'instant' : 'smooth',
+    })
   }, [])
 
   // Modified: Only scroll to bottom when new messages are added (not when loading previous ones)
@@ -137,7 +139,6 @@ export default function ChatHome() {
       const data = response.data
       if (data.success) {
         const responseMessage = data.responseMessage
-        console.log('responseMessage', responseMessage)
         handleResponseMessage(activeChat, responseMessage, newMessage.messageId)
         setIsTyping(false)
         return
@@ -166,9 +167,7 @@ export default function ChatHome() {
     const timestampToLoad = new Date(firstMessageTime).toISOString()
 
     const response = await axios.get(
-      `${
-        process.env.NEXT_PUBLIC_BACKEND_URL
-      }/chat/${activeChat}?beforeTimestamp=${timestampToLoad}`,
+      `${process.env.NEXT_PUBLIC_BACKEND_URL}/chat/${activeChat}?beforeTimestamp=${timestampToLoad}`,
       {
         headers: {
           Authorization: `Bearer ${jwtToken}`,
@@ -179,13 +178,6 @@ export default function ChatHome() {
     const { messages, hasMoreMessages: hasMoreMessagesFromBackend } =
       response.data
 
-    console.log(
-      'messages',
-      messages.map((message: Message) => message.content),
-      'hasMoreMessagesFromBackend',
-      hasMoreMessagesFromBackend
-    )
-
     const pastMessages: Message[] = messages.map((message: Message) => ({
       ...message,
       timestamp: new Date(message.timestamp),
@@ -193,7 +185,11 @@ export default function ChatHome() {
 
     await new Promise((resolve) => setTimeout(resolve, 1000))
 
-    handleAddPreviousMessages(activeChat, pastMessages, hasMoreMessagesFromBackend)
+    handleAddPreviousMessages(
+      activeChat,
+      pastMessages,
+      hasMoreMessagesFromBackend
+    )
 
     setTimeout(() => {
       if (chatContainer) {
@@ -202,11 +198,7 @@ export default function ChatHome() {
         chatContainer.scrollTop = scrollPosition + heightDifference
       }
     }, 0)
-  }, [
-    jwtToken,
-    currentChat,
-    handleAddPreviousMessages,
-  ])
+  }, [jwtToken, currentChat, handleAddPreviousMessages])
 
   const handleClearChat = useCallback(async () => {
     if (!currentChat) return
@@ -235,6 +227,17 @@ export default function ChatHome() {
     localStorage.removeItem('activeChat')
   }, [currentChat, chats, setChats, setActiveChat, jwtToken])
 
+  const handleDeleteUser = useCallback(async () => {
+    await axios.delete(
+      `${process.env.NEXT_PUBLIC_BACKEND_URL}/user`,
+      { headers: { Authorization: `Bearer ${jwtToken}` } }
+    )
+    setChats([])
+    setActiveChat('')
+    localStorage.removeItem('activeChat')
+    setInputMessage('')
+  }, [jwtToken, setChats, setActiveChat, setInputMessage])
+
   return (
     <div className="h-screen flex flex-col overflow-hidden">
       <div className="flex h-full w-full overflow-hidden">
@@ -248,6 +251,7 @@ export default function ChatHome() {
             setInputMessage('')
           }}
           clearChats={() => setChats([])}
+          handleDeleteUser={handleDeleteUser}
         />
 
         {!activeChat && <ChatLandingScreen isMobile={isMobile} />}
@@ -267,7 +271,6 @@ export default function ChatHome() {
             onLoadMoreMessages={handleLoadMoreMessages}
             inputMessage={inputMessage}
             setInputMessage={setInputMessage}
-            
             ref={ref}
             onClearChatClick={handleClearChat}
             isLoadingMore={isLoadingMore}

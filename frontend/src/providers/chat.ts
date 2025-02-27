@@ -40,7 +40,8 @@ export const useChatStore = create<ChatState>((set) => ({
           return {
             ...chat,
             messages: [...chat.messages, message],
-            updatedAt: new Date().toISOString()
+            updatedAt: new Date().toISOString(),
+            messagesRemaining: chat.messagesRemaining - 1,
           }
         }
         
@@ -54,7 +55,8 @@ export const useChatStore = create<ChatState>((set) => ({
         return {
           ...chat,
           messages: updatedMessages,
-          updatedAt: new Date().toISOString()
+          updatedAt: new Date().toISOString(),
+          messagesRemaining: chat.messagesRemaining - 1,
         }
       })
       

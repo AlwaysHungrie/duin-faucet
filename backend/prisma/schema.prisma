@@ -51,5 +51,7 @@ model Message {
 
   chat Chat @relation(fields: [chatId], references: [chatId])
   chatId String
+
+  attestation String?
 }
 

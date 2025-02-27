@@ -13,12 +13,14 @@ export default function ChatList({
   isMobile,
   onChatSelect,
   clearChats,
+  handleDeleteUser,
 }: {
   chats: Chat[]
   activeChatId: string | null
   isMobile: boolean
   onChatSelect: (chatId: string) => void
   clearChats: () => void
+  handleDeleteUser: () => void
 }) {
   const [dropdownOpen, setDropdownOpen] = useState(false)
   const dropdownRef = useRef<HTMLDivElement>(null)
@@ -83,6 +85,14 @@ export default function ChatList({
                   onClick={handleLogout}
                 >
                   Logout
+                </button>
+              )}
+              {address && (
+                <button 
+                  className="w-full text-left px-4 py-2 text-sm text-gray-700 hover:bg-gray-100"
+                  onClick={handleDeleteUser}
+                >
+                  Delete User
                 </button>
               )}
             </div>
