@@ -1,4 +1,3 @@
-import { useRef, useEffect } from 'react'
 import ChatHeader from './ChatHeader'
 import MessageList from './MessageList'
 import ChatInput from './ChatInput'
@@ -15,6 +14,9 @@ export default function ChatArea({
   onLoadMoreMessages,
   inputMessage,
   setInputMessage,
+  messagesEndRef,
+  messagesContainerRef,
+  onClearChatClick,
 }: {
   chat: Chat
   isMobile: boolean
@@ -26,19 +28,10 @@ export default function ChatArea({
   onLoadMoreMessages: () => void
   inputMessage: string
   setInputMessage: (message: string) => void
+  messagesEndRef: React.RefObject<HTMLDivElement | null>
+  messagesContainerRef: React.RefObject<HTMLDivElement | null>
+  onClearChatClick: () => void
 }) {
-  const messagesEndRef = useRef<HTMLDivElement>(null)
-  const messagesContainerRef = useRef<HTMLDivElement>(null)
-
-  // Auto scroll to bottom when new messages are added
-  useEffect(() => {
-    scrollToBottom()
-  }, [chat.messages.length])
-
-  const scrollToBottom = () => {
-    messagesEndRef.current?.scrollIntoView({ behavior: 'smooth' })
-  }
-
   const handleScroll = (e: React.UIEvent<HTMLDivElement>) => {
     const { scrollTop } = e.target as HTMLDivElement
 
@@ -59,7 +52,11 @@ export default function ChatArea({
       ${isMobile && !chat ? 'translate-x-[100%]' : 'translate-x-0'} 
       transition-transform duration-300 ease-in-out`}
     >
-      <ChatHeader chat={chat} onBackClick={onBackClick} />
+      <ChatHeader
+        chat={chat}
+        onBackClick={onBackClick}
+        onClearChatClick={onClearChatClick}
+      />
 
       <MessageList
         messages={chat.messages}

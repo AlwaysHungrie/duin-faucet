@@ -7,16 +7,28 @@ import ChatLandingScreen from '@/components/ChatLandingScreen'
 import { useMediaQuery } from '@/hooks/useMediaQuery'
 import { usePrivyAuth } from '@/hooks/usePrivyAuth'
 import { useChatStore } from '@/providers/chat'
+import axios from 'axios'
 import { useCallback, useEffect, useMemo, useRef, useState } from 'react'
 
 export default function ChatHome() {
   const { jwtToken } = usePrivyAuth()
-  const { chats, activeChat, setActiveChat, setChats, handleResponseMessage } = useChatStore()
+  const {
+    chats,
+    activeChat,
+    setActiveChat,
+    setChats,
+    handleResponseMessage,
+    handleAddPreviousMessages,
+  } = useChatStore()
   const isMobile = useMediaQuery('(max-width: 768px)')
 
   const [isTyping, setIsTyping] = useState(false)
   const [inputMessage, setInputMessage] = useState('')
+
   const messagesEndRef = useRef<HTMLDivElement>(null)
+  const messagesContainerRef = useRef<HTMLDivElement>(null)
+
+  const isLoadingPrev = useRef(false)
 
   const currentChat = useMemo(() => {
     return chats.find((chat: Chat) => chat.chatId === activeChat)
@@ -43,12 +55,16 @@ export default function ChatHome() {
               timestamp: new Date(message.timestamp),
             })),
             status: 'active',
+            hasMoreMessages: chat.hasMoreMessages,
+            isLoadingMore: false,
           })) satisfies Chat[]
         )
-        setActiveChat(localStorage.getItem('activeChat') || '')
+        if (!isMobile) {
+          setActiveChat(localStorage.getItem('activeChat') || '')
+        }
       }
     },
-    [setChats, setActiveChat]
+    [setChats, setActiveChat, isMobile]
   )
 
   useEffect(() => {
@@ -58,52 +74,162 @@ export default function ChatHome() {
   }, [jwtToken, getChats])
 
   const scrollToBottom = useCallback(() => {
-    messagesEndRef.current?.scrollIntoView({ behavior: 'smooth' })
+    messagesEndRef.current?.scrollIntoView({ behavior: 'instant' })
   }, [])
 
-  // Auto scroll to bottom when new messages are added
+  // Modified: Only scroll to bottom when new messages are added (not when loading previous ones)
   useEffect(() => {
-    if (currentChat) {
+    if (currentChat && !isLoadingPrev.current) {
       scrollToBottom()
+    } else {
+      setTimeout(() => {
+        isLoadingPrev.current = false
+      }, 100)
     }
   }, [currentChat?.messages?.length, scrollToBottom, currentChat])
 
-  const handleSendMessage = useCallback(async (message: string) => {
-    if (!activeChat) return
-    setInputMessage('')
-    setIsTyping(true)
+  const handleSendMessage = useCallback(
+    async (message: string) => {
+      if (!activeChat) return
+      setInputMessage('')
+      setIsTyping(true)
 
-    const newMessage: Message = {
-      id: crypto.randomUUID(),
-      content: message,
-      role: 'user',
-      timestamp: new Date().toISOString(),
-    }
-
-    const updatedChats = chats.map((chat: Chat) => {
-      if (chat.chatId === activeChat) {
-        return {
-          ...chat,
-          messages: [...chat.messages, newMessage],
-        }
+      const newMessage: Message = {
+        messageId: crypto.randomUUID(),
+        content: message,
+        role: 'user',
+        timestamp: new Date().toISOString(),
       }
-      return chat
-    })
 
-    setChats(updatedChats)
+      const updatedChats = chats.map((chat: Chat) => {
+        if (chat.chatId === activeChat) {
+          return {
+            ...chat,
+            messages: [...chat.messages, newMessage],
+          }
+        }
+        return chat
+      })
 
-    const responseMessage: Message = {
-      id: crypto.randomUUID(),
-      content: 'This is a response message',
-      role: 'assistant',
-      timestamp: new Date().toISOString(),
-    }
+      setChats(updatedChats)
+
+      const response = await axios.post(
+        `${process.env.NEXT_PUBLIC_BACKEND_URL}/chat/message`,
+        {
+          chatId: activeChat,
+          message,
+        },
+        {
+          headers: {
+            Authorization: `Bearer ${jwtToken}`,
+          },
+        }
+      )
+
+      const data = response.data
+      if (data.success) {
+        const responseMessage = data.responseMessage
+        console.log('responseMessage', responseMessage)
+        handleResponseMessage(activeChat, responseMessage, newMessage.messageId)
+        setIsTyping(false)
+        return
+      }
+      setIsTyping(false)
+    },
+    [activeChat, chats, setChats, handleResponseMessage, jwtToken]
+  )
+
+  const handleLoadMoreMessages = useCallback(async () => {
+    if (currentChat?.isLoadingMore) return
+    if (!currentChat?.hasMoreMessages) return
+    const activeChat = currentChat?.chatId
+
+    // Set loading state for previous messages
+    currentChat.isLoadingMore = true
+    isLoadingPrev.current = true
+
+    // Store the current scroll height before loading new messages
+    const chatContainer = messagesEndRef.current?.parentElement
+    const scrollHeightBefore = chatContainer?.scrollHeight || 0
+    const scrollPosition = chatContainer?.scrollTop || 0
+
+    const firstMessageTime = currentChat?.messages[0].timestamp
+    const timestampToLoad = new Date(firstMessageTime).toISOString()
+
+    const response = await axios.get(
+      `${
+        process.env.NEXT_PUBLIC_BACKEND_URL
+      }/chat/${activeChat}?beforeTimestamp=${timestampToLoad}`,
+      {
+        headers: {
+          Authorization: `Bearer ${jwtToken}`,
+        },
+      }
+    )
+
+    const { messages, hasMoreMessages: hasMoreMessagesFromBackend } =
+      response.data
+
+    console.log(
+      'messages',
+      messages.map((message: Message) => message.content),
+      'hasMoreMessagesFromBackend',
+      hasMoreMessagesFromBackend
+    )
 
     await new Promise((resolve) => setTimeout(resolve, 3000))
 
-    handleResponseMessage(activeChat, responseMessage, newMessage.id)
-    setIsTyping(false)
-  }, [activeChat, chats, setChats, handleResponseMessage])
+    const pastMessages: Message[] = messages.map((message: Message) => ({
+      ...message,
+      timestamp: new Date(message.timestamp),
+    }))
+
+    // await new Promise((resolve) => setTimeout(resolve, 3000))
+
+    handleAddPreviousMessages(activeChat, pastMessages, hasMoreMessagesFromBackend)
+
+    // After the messages are rendered, adjust scroll position
+    setTimeout(() => {
+      if (chatContainer) {
+        const newScrollHeight = chatContainer.scrollHeight
+        const heightDifference = newScrollHeight - scrollHeightBefore
+        chatContainer.scrollTop = scrollPosition + heightDifference
+      }
+
+      currentChat.isLoadingMore = false
+    }, 100)
+  }, [
+    jwtToken,
+    currentChat,
+    handleAddPreviousMessages,
+  ])
+
+  const handleClearChat = useCallback(async () => {
+    if (!currentChat) return
+    await axios.delete(
+      `${process.env.NEXT_PUBLIC_BACKEND_URL}/chat/${currentChat.chatId}`,
+      {
+        headers: {
+          Authorization: `Bearer ${jwtToken}`,
+        },
+      }
+    )
+    setChats(
+      chats.map((chat: Chat) => {
+        if (chat.chatId === currentChat.chatId) {
+          return {
+            ...chat,
+            messages: [],
+            messagesRemaining: 10,
+            messagesResetTime: new Date(),
+          }
+        }
+        return chat
+      })
+    )
+    setActiveChat('')
+    localStorage.removeItem('activeChat')
+  }, [currentChat, chats, setChats, setActiveChat, jwtToken])
 
   return (
     <div className="h-screen flex flex-col overflow-hidden">
@@ -127,17 +253,20 @@ export default function ChatHome() {
             chat={currentChat}
             isMobile={isMobile}
             isTyping={isTyping}
-            isLoadingMore={false}
-            hasMoreMessages={false}
+            isLoadingMore={isLoadingPrev.current}
+            hasMoreMessages={currentChat.hasMoreMessages}
             onBackClick={() => {
               setActiveChat('')
               localStorage.removeItem('activeChat')
               setInputMessage('')
             }}
             onSendMessage={handleSendMessage}
-            onLoadMoreMessages={() => {}}
+            onLoadMoreMessages={handleLoadMoreMessages}
             inputMessage={inputMessage}
             setInputMessage={setInputMessage}
+            messagesEndRef={messagesEndRef}
+            messagesContainerRef={messagesContainerRef}
+            onClearChatClick={handleClearChat}
           />
         )}
       </div>

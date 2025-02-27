@@ -31,24 +31,41 @@ export default function MessageList({
       ref={messagesContainerRef}
       onScroll={onScroll}
     >
-      {isLoadingMore && (
+      {/* {isLoadingMore ? (
         <div className="flex justify-center mb-4">
           <span className="px-3 py-1 bg-gray-200 rounded-md text-xs flex items-center">
             <Loader className="h-3 w-3 animate-spin mr-2" />
             Loading previous messages...
           </span>
         </div>
-      )}
-
-      {!isLoadingMore && hasMoreMessages && (
+      ) : hasMoreMessages ? (
         <div className="flex justify-center mb-4">
           <span className="text-xs text-gray-500">
             Scroll up to load more messages
           </span>
         </div>
-      )}
+      ) : (
+        <div className="flex justify-center mb-4">
+          <span className="text-xs text-gray-500">
+            Beginning of conversation
+          </span>
+        </div>
+      )} */}
 
-      {!hasMoreMessages && (
+      {hasMoreMessages ? isLoadingMore ? (
+        <div className="flex justify-center mb-4">
+          <span className="px-3 py-1 bg-gray-200 rounded-md text-xs flex items-center">
+            <Loader className="h-3 w-3 animate-spin mr-2" />
+            Loading previous messages...
+          </span>
+        </div>
+      ) : (
+        <div className="flex justify-center mb-4">
+          <span className="text-xs text-gray-500">
+            Scroll up to load more messages
+          </span>
+        </div>
+      ) : (
         <div className="flex justify-center mb-4">
           <span className="text-xs text-gray-500">
             Beginning of conversation
@@ -56,8 +73,24 @@ export default function MessageList({
         </div>
       )}
 
+      {/* {!isLoadingMore &&
+        (hasMoreMessages ? (
+          <div className="flex justify-center mb-4">
+            <span className="text-xs text-gray-500">
+              Scroll up to load more messages
+            </span>
+          </div>
+        ) : (
+          <div className="flex justify-center mb-4">
+            <span className="text-xs text-gray-500">
+              Beginning of conversation
+            </span>
+          </div>
+        ))
+      } */}
+
       {messages.map((message) => (
-        <MessageItem key={message.id} message={message} />
+        <MessageItem key={message.messageId} message={message} />
       ))}
 
       {isTyping && (

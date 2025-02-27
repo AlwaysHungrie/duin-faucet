@@ -10,10 +10,13 @@ export type Chat = {
   status: (typeof ChatStatus)[number]
 
   messages: Message[]
+  
+  isLoadingMore: boolean
+  hasMoreMessages: boolean
 }
 
 export type Message = {
-  id: string
+  messageId: string
   content: string
   role: 'user' | 'assistant'
   timestamp: string
