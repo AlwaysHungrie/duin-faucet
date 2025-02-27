@@ -75,7 +75,6 @@ export default function ChatHome() {
   )
 
   useEffect(() => {
-    console.log('jwtToken', jwtToken)
     if (!jwtToken) return
     getChats(jwtToken)
   }, [jwtToken, getChats])
@@ -86,7 +85,6 @@ export default function ChatHome() {
     })
   }, [])
 
-  // Modified: Only scroll to bottom when new messages are added (not when loading previous ones)
   useEffect(() => {
     if (currentChat && !ref.current.isLoadingMore) {
       scrollToBottom()
@@ -200,6 +198,7 @@ export default function ChatHome() {
     }, 0)
   }, [jwtToken, currentChat, handleAddPreviousMessages])
 
+  // Not for production
   const handleClearChat = useCallback(async () => {
     if (!currentChat) return
     await axios.delete(
@@ -227,6 +226,7 @@ export default function ChatHome() {
     localStorage.removeItem('activeChat')
   }, [currentChat, chats, setChats, setActiveChat, jwtToken])
 
+  // Not for production
   const handleDeleteUser = useCallback(async () => {
     await axios.delete(
       `${process.env.NEXT_PUBLIC_BACKEND_URL}/user`,

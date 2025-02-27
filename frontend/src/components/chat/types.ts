@@ -20,4 +20,5 @@ export type Message = {
   content: string
   role: 'user' | 'assistant'
   timestamp: string
+  attestation?: string
 }

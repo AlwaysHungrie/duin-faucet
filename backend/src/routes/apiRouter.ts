@@ -2,13 +2,14 @@ import express from 'express'
 import authRouter from './authRoutes'
 import chatRouter from './chatRoutes'
 import userRouter from './userRouter'
+import verifierRouter from './verifierRouter'
 
 const router = express.Router()
 
 router.use('/auth', authRouter)
 router.use('/chat', chatRouter)
 router.use('/user', userRouter)
-
+router.use('/verifier', verifierRouter)
 // Global error handling middleware
 router.use((err: any, req: express.Request, res: express.Response, next: express.NextFunction) => {
   console.error('Auth Error:', err)

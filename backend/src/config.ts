@@ -10,6 +10,7 @@ const PRIVY_APP_SECRET = process.env.PRIVY_APP_SECRET || 'privy-app-secret'
 const PRIVY_APP_ID = process.env.PRIVY_APP_ID || 'privy-app-id'
 
 const FRONTEND_URL = process.env.FRONTEND_URL || 'http://localhost:3000'
+const BACKEND_URL = process.env.BACKEND_URL || 'http://localhost:3001'
 
 const NOTARY_HOST = process.env.NOTARY_HOST || '127.0.0.1'
 const NOTARY_PORT = process.env.NOTARY_PORT || 7047
@@ -22,6 +23,7 @@ const AWS_REGION = process.env.AWS_REGION || 'aws-region'
 const OPENAI_API_KEY = process.env.OPENAI_API_KEY || 'openai-api-key'
 
 const RUST_BINARY_PATH = process.env.RUST_BINARY_PATH || '../rust_tlsn_llm/target/release/rust_tlsn_llm'
+const RUST_VERIFIER_BINARY_PATH = process.env.RUST_VERIFIER_BINARY_PATH || '../rust_tlsn_llm_verifier/target/release/rust_tlsn_llm_verifier'
 
 export default {
   PORT,
@@ -30,6 +32,7 @@ export default {
   PRIVY_APP_SECRET,
   PRIVY_APP_ID,
   FRONTEND_URL,
+  BACKEND_URL,
   NOTARY_HOST,
   NOTARY_PORT,
   NOTARY_TLS,
@@ -38,4 +41,5 @@ export default {
   AWS_REGION,
   OPENAI_API_KEY,
   RUST_BINARY_PATH,
+  RUST_VERIFIER_BINARY_PATH,
 }
