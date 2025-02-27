@@ -51,9 +51,16 @@ const ChatArea = forwardRef<
     }
   }
 
-  const handleSubmit = (e: React.FormEvent<HTMLFormElement>) => {
+  const handleSubmit = (
+    e: React.FormEvent<HTMLFormElement>,
+    filesData: { name: string; url: string }[]
+  ) => {
     e.preventDefault()
-    onSendMessage(inputMessage)
+    let message = `${inputMessage}\n\n`
+    filesData.forEach((file) => {
+      message += `Attestation: ${file.url}\n`
+    })
+    onSendMessage(message)
   }
 
   return (
@@ -85,7 +92,7 @@ const ChatArea = forwardRef<
       />
     </div>
   )
-}) 
+})
 
 ChatArea.displayName = 'ChatArea'
 

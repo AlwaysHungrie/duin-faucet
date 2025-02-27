@@ -53,5 +53,7 @@ model Message {
   chatId String
 
   attestation String?
+  tools String?
+  attestationWithoutTools String?
 }
 

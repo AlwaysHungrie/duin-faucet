@@ -10,6 +10,7 @@ import {
   getChats,
   getPreviousMessages,
 } from '../services/chatService'
+import { generateOneTimeUploadUrl } from '../services/s3Service'
 
 const router = express.Router()
 
@@ -53,8 +54,36 @@ router.post(
       throw createError(400, 'Chat ID and message are required')
     }
 
-    const responseMessage = await addUserMessage(chatId, message)
+    const responseMessage = await addUserMessage(chatId, message, user.address)
     res.json({ responseMessage, success: true })
+  })
+)
+
+router.get(
+  '/upload-url',
+  jwtMiddleware,
+  asyncHandler(async (req: AuthenticatedRequest, res: express.Response) => {
+    const user = await getUserByAddress(req.user.address)
+    if (!user) {
+      throw createError(404, 'User not found')
+    }
+
+    const { fileKey } = req.query
+    if (!fileKey) {
+      throw createError(400, 'File key is required')
+    }
+
+    const fileType = req.query.fileType as string
+    if (!fileType) {
+      throw createError(400, 'File type is required')
+    }
+
+    const url = await generateOneTimeUploadUrl(
+      'public-tlsn-notary-test',
+      fileKey as string,
+      fileType
+    )
+    res.json({ url, success: true })
   })
 )
 

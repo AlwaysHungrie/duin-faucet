@@ -24,6 +24,16 @@ app.get(
     if (!key) {
       return res.status(400).json({ error: 'Key is required' })
     }
+
+    console.log('requesting presigned url for key', key)
+
+    if (typeof key === 'string' && key.startsWith('https://public-tlsn-notary-test.s3.ap-south-1.amazonaws.com/')) {
+      res.send({
+        downloadUrl: key,
+      })
+      return
+    }
+
     const presignedUrl = await generateOneTimeDownloadUrl(
       'tlsn-notary-test',
       key as string

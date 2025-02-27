@@ -3,7 +3,16 @@ import prisma from '../prisma'
 import createError from 'http-errors'
 import { executeLLM } from './llmService'
 import config from '../config'
-import { SCOREKEEPER_SYSTEM_PROMPT } from '../constants/systemPrompts'
+import {
+  DUIN_SYSTEM_PROMPT,
+  SCOREKEEPER_SYSTEM_PROMPT,
+} from '../constants/systemPrompts'
+import {
+  checkIfSystemPromptInRequest,
+  extractAttestationUrls,
+  extractMessageFromRecv,
+} from '../utils/userMessageUtils'
+import { executeVerifier } from './llmVerifierService'
 
 const { OPENAI_API_KEY } = config
 
@@ -11,9 +20,49 @@ const defaultChatNames = ['duin', 'scorekeeper']
 const defaultChatTotalMessagesAllowed = 10
 
 const defaultMessage = {
-  duin: 'Hello, I am Duin. I am a helpful assistant that can help you with your questions.',
+  duin: `Greetings, seeker of knowledge! I am the Duin, ready to assess the merits of your creation. Share with me my Scorekeeper's findings, and I shall render my mystical judgment upon your work and grant you the tools to develop it further.`,
   scorekeeper: `Hey there! I'm Duin's scorekeeper. I will provide detailed feedback and a scorecard for your project idea. You can download each message I send as an attestation of your scorecard and use it while you're talking to Duin.`,
 }
+const defaultTools = [
+  {
+    type: 'function',
+    function: {
+      name: 'send_eth',
+      description: 'Send ETH to the user',
+      parameters: {
+        type: 'object',
+        properties: {
+          amount: {
+            type: 'number',
+            description: 'The amount of ETH to send to the user',
+          },
+          address: {
+            type: 'string',
+            description: 'The address of the user to send the ETH to',
+          },
+        },
+        required: ['amount', 'address'],
+      },
+    },
+  },
+  {
+    type: 'function',
+    function: {
+      name: 'send_nft',
+      description: 'Send an NFT to the user',
+      parameters: {
+        type: 'object',
+        properties: {
+          address: {
+            type: 'string',
+            description: 'The address of the user to send the NFT to',
+          },
+        },
+        required: ['address'],
+      },
+    },
+  },
+]
 
 export const getChats = async (userId: string) => {
   const limit = 5
@@ -113,7 +162,11 @@ export const deleteChats = async (userId: string) => {
   })
 }
 
-export const addUserMessage = async (chatId: string, message: string) => {
+export const addUserMessage = async (
+  chatId: string,
+  message: string,
+  address: string
+) => {
   const chat = await prisma.chat.findUnique({
     where: { chatId },
   })
@@ -144,6 +197,8 @@ export const addUserMessage = async (chatId: string, message: string) => {
 
   let responseMessageContent = ''
   let attestation = ''
+  let tools = ''
+  let attestationWithoutTools = ''
   if (chat.name === 'scorekeeper') {
     const { llm_response, attestation_url } = await executeLLM({
       url: 'https://api.openai.com/v1/chat/completions',
@@ -164,6 +219,81 @@ export const addUserMessage = async (chatId: string, message: string) => {
     responseMessageContent = llm_response?.choices[0]?.message?.content || ''
   }
 
+  if (chat.name === 'duin') {
+    const attestationUrls = extractAttestationUrls(message)
+    console.log('attestationUrls', attestationUrls)
+
+    const verifiedAttestationData = (
+      await Promise.all(
+        attestationUrls.map(async (url) => {
+          const response = await executeVerifier({ fileKey: url })
+          const isSystemPromptInRequest = checkIfSystemPromptInRequest(
+            response?.sent,
+            SCOREKEEPER_SYSTEM_PROMPT
+          )
+          if (!isSystemPromptInRequest) {
+            return null
+          }
+          const llmResponse = extractMessageFromRecv(response?.recv)
+          return llmResponse
+        })
+      )
+    ).filter((data) => Boolean(data))
+
+    let scorekeeperMessage = '[SCOREKEEPER]: No score generated for this user'
+    if (verifiedAttestationData.length > 0) {
+      scorekeeperMessage = `[SCOREKEEPER]:\n ${verifiedAttestationData[0]}`
+    }
+
+    const { llm_response, attestation_url } = await executeLLM({
+      url: 'https://api.openai.com/v1/chat/completions',
+      apiKey: OPENAI_API_KEY,
+      llmRequest: {
+        messages: [
+          { role: 'system', content: DUIN_SYSTEM_PROMPT },
+          { role: 'system', content: `Users Wallet Address: ${address}` },
+          { role: 'user', content: message },
+          { role: 'user', content: scorekeeperMessage },
+        ],
+        model: 'gpt-4o-mini',
+        max_tokens: 1000,
+      },
+      userDir,
+      outputPrefix,
+    })
+
+    attestation = attestation_url
+    responseMessageContent = llm_response?.choices[0]?.message?.content || ''
+
+    const {
+      llm_response: llm_response_tools,
+      attestation_url: attestation_url_tools,
+    } = await executeLLM({
+      url: 'https://api.openai.com/v1/chat/completions',
+      apiKey: OPENAI_API_KEY,
+      llmRequest: {
+        messages: [
+          { role: 'system', content: DUIN_SYSTEM_PROMPT },
+          { role: 'system', content: `Users Wallet Address: ${address}` },
+          { role: 'user', content: message },
+          { role: 'user', content: scorekeeperMessage },
+        ],
+        model: 'gpt-4o-mini',
+        max_tokens: 1000,
+        tools: defaultTools,
+      },
+      userDir,
+      outputPrefix,
+    })
+
+    const toolsUsed = llm_response_tools?.choices[0]?.message?.tool_calls
+    if (toolsUsed && toolsUsed.length > 0) {
+      attestation = attestation_url_tools
+      attestationWithoutTools = attestation_url
+      tools = JSON.stringify(toolsUsed)
+    }
+  }
+
   console.log('responseMessageContent', responseMessageContent)
   console.log('attestation', attestation)
 
@@ -173,6 +303,8 @@ export const addUserMessage = async (chatId: string, message: string) => {
       role: 'assistant',
       chatId,
       attestation,
+      tools,
+      attestationWithoutTools,
     },
   })
 

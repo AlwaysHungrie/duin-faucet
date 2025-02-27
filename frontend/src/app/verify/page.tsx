@@ -79,16 +79,73 @@ export default function VerifyPage() {
           {JSON.stringify(data, null, 2)}
         </pre>
       )
-    // eslint-disable-next-line @typescript-eslint/no-unused-vars
+      // eslint-disable-next-line @typescript-eslint/no-unused-vars
     } catch (_) {
       return json
     }
   }
 
   const renderSent = (sent: string) => {
-    return sent.split('\r\n').map((line, index) => (
-      <span key={index}>{renderIfJson(line)}</span>
-    ))
+    return sent
+      .split('\r\n')
+      .map((line, index) => <span key={index}>{renderIfJson(line)}</span>)
+  }
+
+  const parseIfJson = (str: string) => {
+    try {
+      return JSON.parse(str)
+      // eslint-disable-next-line @typescript-eslint/no-unused-vars
+    } catch (_) {
+      return null
+    }
+  }
+
+  const extractMessageFromRecv = (response: string) => {
+    const recv = response.substring(
+      response.indexOf('{'),
+      response.lastIndexOf('}') + 1
+    )
+    const recvJson = recv
+      .split('\r\n')
+      .filter((line) => {
+        const isNaturalNumber = /^([1-9]\d*|0)$/.test(line)
+        return !isNaturalNumber
+      })
+      .join('')
+    const jsonResponse = parseIfJson(recvJson)
+
+    if (!jsonResponse) {
+      return null
+    }
+
+    const choice = jsonResponse.choices[0]
+
+    if (!choice) {
+      return null
+    }
+
+    const message = choice.message
+
+    if (!message) {
+      return null
+    }
+
+    return message.content
+  }
+
+  const renderRecv = (recv: string) => {
+    const message = extractMessageFromRecv(recv)
+    const recvHeaders = recv.substring(0, recv.indexOf('{'))
+    return (
+      <>
+        {recvHeaders.split('\n').map((line, index) => (
+          <span key={index}>{renderIfJson(line)}</span>
+        ))}
+        <pre className="bg-gray-100 p-4 rounded-md whitespace-pre-wrap">
+          {message}
+        </pre>
+      </>
+    )
   }
 
   const renderAttestationData = () => {
@@ -103,10 +160,12 @@ export default function VerifyPage() {
           Time: <span className="text-sm">{attestationData?.time}</span>
         </p>
         <p>
-          Notary Key: <span className="text-sm">{attestationData?.verifying_key}</span>
+          Notary Key:{' '}
+          <span className="text-sm">{attestationData?.verifying_key}</span>
         </p>
         <p>
-          Server Name: <span className="text-sm">{attestationData?.server_name}</span>
+          Server Name:{' '}
+          <span className="text-sm">{attestationData?.server_name}</span>
         </p>
         <p>==============================================</p>
         <p>Sent Data:</p>
@@ -115,7 +174,13 @@ export default function VerifyPage() {
         <p>==============================================</p>
         <p>Received Data:</p>
         <br />
-        <p>{renderSent(attestationData?.recv || '')}</p>
+        <p>{renderRecv(attestationData?.recv || '')}</p>
+        <p>==============================================</p>
+        <p>Raw Received Data:</p>
+        <br />
+        <pre className="bg-gray-100 p-4 rounded-md whitespace-pre-wrap">
+          {attestationData?.recv}
+        </pre>
       </div>
     )
   }
