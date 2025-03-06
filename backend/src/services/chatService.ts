@@ -13,16 +13,14 @@ import {
   extractMessageFromRecv,
 } from '../utils/userMessageUtils'
 import { executeVerifier } from './llmVerifierService'
+import {
+  defaultChatNames,
+  defaultLimits,
+  defaultMessages,
+} from '../constants/defaultMessages'
 
 const { OPENAI_API_KEY } = config
 
-const defaultChatNames = ['duin', 'scorekeeper']
-const defaultChatTotalMessagesAllowed = 10
-
-const defaultMessage = {
-  duin: `Greetings, seeker of knowledge! I am the Duin, ready to assess the merits of your creation. Share with me my Scorekeeper's findings, and I shall render my mystical judgment upon your work and grant you the tools to develop it further.`,
-  scorekeeper: `Hey there! I'm Duin's scorekeeper. I will provide detailed feedback and a scorecard for your project idea. You can download each message I send as an attestation of your scorecard and use it while you're talking to Duin.`,
-}
 const defaultTools = [
   {
     type: 'function',
@@ -83,6 +81,7 @@ export const getChats = async (userId: string) => {
     },
   })
 
+  // reset remaining messages if more than reset time has passed
   if (chats && chats.length > 0) {
     const now = new Date()
     await Promise.all(
@@ -109,18 +108,22 @@ export const getChats = async (userId: string) => {
     }))
   }
 
+  // create default chats if none exist i.e. user just signed up
   const now = new Date()
-  // 12 hours from now
-  const messagesResetTime = new Date(now.getTime() + 12 * 60 * 60 * 1000)
 
   const defaultChats = await Promise.all(
     defaultChatNames.map(async (name) => {
+      const totalMessagesAllowed = defaultLimits[name].messagesAllowed
+      const resetTimeInHours = defaultLimits[name].resetTimeInHours
+      const messagesResetTime = new Date(
+        now.getTime() + resetTimeInHours * 60 * 60 * 1000
+      )
       const chat = await prisma.chat.create({
         data: {
           name,
           userId,
-          totalMessagesAllowed: defaultChatTotalMessagesAllowed,
-          messagesRemaining: defaultChatTotalMessagesAllowed,
+          totalMessagesAllowed,
+          messagesRemaining: totalMessagesAllowed,
           messagesResetTime,
           status: 'active',
         },
@@ -132,21 +135,30 @@ export const getChats = async (userId: string) => {
 
   const withMessages = await Promise.all(
     defaultChats.map(async (chat) => {
+      let totalMessagesAllowed = -1
+      if (chat.name in defaultLimits) {
+        totalMessagesAllowed =
+          defaultLimits[chat.name as (typeof defaultChatNames)[number]]
+            .messagesAllowed
+      }
+
       let messages: Message[] = []
-      if (chat.name === 'duin' || chat.name === 'scorekeeper') {
+      if (chat.name in defaultMessages) {
+        const firstMessage =
+          defaultMessages[chat.name as (typeof defaultChatNames)[number]]
         const newMessage = await prisma.message.create({
           data: {
-            content: defaultMessage[chat.name],
+            content: firstMessage,
             role: 'assistant',
             chatId: chat.chatId,
           },
         })
-        messages = [newMessage]
+        messages.push(newMessage)
       }
       return {
         ...chat,
         messages: messages,
-        hasMoreMessages: messages.length > defaultChatTotalMessagesAllowed,
+        hasMoreMessages: messages.length > totalMessagesAllowed,
       }
     })
   )
@@ -155,11 +167,35 @@ export const getChats = async (userId: string) => {
 }
 
 export const deleteChats = async (userId: string) => {
-  await prisma.chat.deleteMany({
+  const chats = await prisma.chat.findMany({
     where: {
       userId,
     },
   })
+
+  // delete all messages for the chats
+  const messages = await prisma.message.deleteMany({
+    where: {
+      chat: {
+        chatId: {
+          in: chats.map((chat) => chat.chatId),
+        },
+      },
+    },
+  })
+
+  console.log('deleted messages', messages.count)
+
+  // delete all chats
+  const chatsDeleted = await prisma.chat.deleteMany({
+    where: {
+      userId,
+    },
+  })
+
+  console.log('deleted chats', chatsDeleted.count)
+
+  return chats
 }
 
 export const addUserMessage = async (
@@ -351,6 +387,13 @@ export const clearChat = async (chatId: string) => {
     throw createError(404, 'Chat not found')
   }
 
+  let defaultChatTotalMessagesAllowed = -1
+  if (chat.name in defaultLimits) {
+    defaultChatTotalMessagesAllowed =
+      defaultLimits[chat.name as (typeof defaultChatNames)[number]]
+        .messagesAllowed
+  }
+
   await prisma.chat.update({
     where: { chatId },
     data: {
@@ -359,12 +402,16 @@ export const clearChat = async (chatId: string) => {
     },
   })
 
-  console.log('chat.name', chat.name)
+  let defaultMessage = ''
+  if (chat.name in defaultMessages) {
+    defaultMessage =
+      defaultMessages[chat.name as (typeof defaultChatNames)[number]]
+  }
 
-  if (chat.name === 'duin' || chat.name === 'scorekeeper') {
+  if (defaultMessage) {
     await prisma.message.create({
       data: {
-        content: defaultMessage[chat.name],
+        content: defaultMessage,
         role: 'assistant',
         chatId,
       },

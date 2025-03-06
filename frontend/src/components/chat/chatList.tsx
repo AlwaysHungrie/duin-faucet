@@ -1,11 +1,6 @@
-import { Button } from '@/components/ui/button'
-import { MoreVertical } from 'lucide-react'
+import { usePrivyAuth } from '@/hooks/usePrivyAuth'
 import ChatItem from './chatItem'
 import { Chat } from './types'
-import { usePrivyAuth } from '@/hooks/usePrivyAuth'
-import { formatAddress } from '@/utils/formatting'
-import Avatar from '../avatar'
-import { useState, useRef, useEffect } from 'react'
 
 export default function ChatList({
   chats,
@@ -22,31 +17,9 @@ export default function ChatList({
   clearChats: () => void
   handleDeleteUser: () => void
 }) {
-  const [dropdownOpen, setDropdownOpen] = useState(false)
-  const dropdownRef = useRef<HTMLDivElement>(null)
   const activeChat = chats.find((chat) => chat.chatId === activeChatId)
-  const { authenticatedUser: user, logout, isLoading, login } = usePrivyAuth()
+  const { authenticatedUser: user, isLoading, login } = usePrivyAuth()
   const address = user && user.wallet?.address
-
-  const handleLogout = () => {
-    logout()
-    setDropdownOpen(false)
-    clearChats()
-  }
-
-  // Close dropdown when clicking outside
-  useEffect(() => {
-    const handleClickOutside = (event: MouseEvent) => {
-      if (dropdownRef.current && !dropdownRef.current.contains(event.target as Node)) {
-        setDropdownOpen(false)
-      }
-    }
-    
-    document.addEventListener('mousedown', handleClickOutside)
-    return () => {
-      document.removeEventListener('mousedown', handleClickOutside)
-    }
-  }, [])
 
   return (
     <div
@@ -54,58 +27,38 @@ export default function ChatList({
       ${isMobile && activeChat ? 'translate-x-[-100%]' : 'translate-x-0'}
        transition-transform duration-300 ease-in-out flex flex-col`}
     >
-      <div className="bg-homeBg p-3 flex items-center justify-between">
-        <h1 className="text-lg font-medium flex items-center gap-2">
-          {isLoading ? (
-            <span className="text-gray-500">loading...</span>
-          ) : address ? (
-            <>
-              <Avatar address={address} height={24} width={24} />
-              {formatAddress(address)}
-            </>
-          ) : (
-            <button onClick={login}>Connect wallet</button>
-          )}
-        </h1>
-        <div className="relative" ref={dropdownRef}>
-          <Button 
-            variant="ghost" 
-            size="icon" 
-            className='h-6 w-6'
-            onClick={() => setDropdownOpen(!dropdownOpen)}
-          >
-            <MoreVertical className="h-5 w-5" />
-          </Button>
-          
-          {dropdownOpen && (
-            <div className="absolute right-0 mt-1 w-36 bg-white rounded-md shadow-lg z-20 border">
-              {address && (
-                <button 
-                  className="w-full text-left px-4 py-2 text-sm text-gray-700 hover:bg-gray-100"
-                  onClick={handleLogout}
-                >
-                  Logout
-                </button>
-              )}
-              {address && (
-                <button 
-                  className="w-full text-left px-4 py-2 text-sm text-gray-700 hover:bg-gray-100"
-                  onClick={handleDeleteUser}
-                >
-                  Delete User
-                </button>
-              )}
-            </div>
-          )}
-        </div>
-      </div>
       <div className="flex-1 overflow-y-auto">
+        {(isLoading || !address) && (
+          <div
+            onClick={login}
+            className={`flex items-center p-3 border-b cursor-pointer bg-gray-100 hover:bg-gray-200`}
+          >
+            <div className="flex items-center w-full">
+              <div className="flex-1 min-w-0">
+                <div className="flex justify-between items-baseline">
+                  <span className="font-medium truncate">
+                    {isLoading ? 'Loading...' : 'Wallet not connected'}
+                  </span>
+                </div>
+
+                <div className="flex justify-between items-center">
+                  <p className="text-xs text-gray-600 truncate">
+                    {isLoading ? '' : 'Please connect your wallet to continue'}
+                  </p>
+                </div>
+              </div>
+            </div>
+          </div>
+        )}
+
         {chats.map((chat) => (
           <ChatItem
             key={chat.chatId}
             chat={chat}
             isActive={activeChat?.chatId === chat.chatId}
             onClick={() => onChatSelect(chat.chatId)}
+            handleDeleteUser={handleDeleteUser}
+            clearChats={clearChats}
           />
         ))}
       </div>

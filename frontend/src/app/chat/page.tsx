@@ -10,6 +10,8 @@ import { useChatStore } from '@/providers/chat'
 import axios from 'axios'
 import { useCallback, useEffect, useMemo, useRef, useState } from 'react'
 
+const chatOrder = ['self', 'scorekeeper', 'duin', 'towncrier']
+
 export default function ChatHome() {
   const { jwtToken } = usePrivyAuth()
   const {
@@ -55,20 +57,22 @@ export default function ChatHome() {
       if (data.success) {
         console.log('chats', data.chats)
         setChats(
-          data.chats.map((chat: Chat) => ({
-            ...chat,
-            messages: chat.messages.map((message: Message) => ({
-              ...message,
-              timestamp: new Date(message.timestamp),
-            })),
-            status: 'active',
-            hasMoreMessages: chat.hasMoreMessages,
-            isLoadingMore: false,
-          })) satisfies Chat[]
+          data.chats
+            .map((chat: Chat) => ({
+              ...chat,
+              messages: chat.messages.map((message: Message) => ({
+                ...message,
+                timestamp: new Date(message.timestamp),
+              })),
+              status: 'active',
+              hasMoreMessages: chat.hasMoreMessages,
+              isLoadingMore: false,
+            }))
+            .sort(
+              (a: Chat, b: Chat) =>
+                chatOrder.indexOf(a.name) - chatOrder.indexOf(b.name)
+            ) satisfies Chat[]
         )
-        // if (!isMobile) {
-        //   setActiveChat(localStorage.getItem('activeChat') || '')
-        // }
       }
     },
     [setChats]
@@ -228,10 +232,9 @@ export default function ChatHome() {
 
   // Not for production
   const handleDeleteUser = useCallback(async () => {
-    await axios.delete(
-      `${process.env.NEXT_PUBLIC_BACKEND_URL}/user`,
-      { headers: { Authorization: `Bearer ${jwtToken}` } }
-    )
+    await axios.delete(`${process.env.NEXT_PUBLIC_BACKEND_URL}/user`, {
+      headers: { Authorization: `Bearer ${jwtToken}` },
+    })
     setChats([])
     setActiveChat('')
     localStorage.removeItem('activeChat')
