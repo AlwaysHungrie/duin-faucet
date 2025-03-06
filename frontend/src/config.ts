@@ -32,7 +32,7 @@ const SCROLL = {
 }
 
 export const CONFIG = {
-  TELEGRAM_URL: 'https://t.me/getduinbot',
+  // TELEGRAM_URL: 'https://t.me/getduinbot',
   X_URL: 'https://x.com/getduinbot',
   VALID_CHAINS: {
     base: BASE.id,

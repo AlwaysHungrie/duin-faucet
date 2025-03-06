@@ -29,7 +29,7 @@ const FunctionCall = ({ name, args }: { name: string; args: string }) => {
         }}
         className="mt-2"
       >
-        Execute With Constella
+        Executed With Constella
       </CTAButton>
     </div>
   )

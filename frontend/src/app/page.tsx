@@ -49,15 +49,6 @@ export default function Home() {
       <div className="flex flex-col items-center h-dvh p-4 overflow-hidden w-screen relative">
         <div className="flex w-full z-10 pt-2">
           <div className="flex items-center gap-2 ml-auto pr-2">
-            <Link href={CONFIG.TELEGRAM_URL} target="_blank">
-              <Image
-                src="/telegram-blue.svg"
-                alt="telegram"
-                height={32}
-                width={32}
-                className="opacity-80 hover:opacity-100"
-              />
-            </Link>
             <Link href={CONFIG.X_URL} target="_blank">
               <Image
                 src="/twitter.svg"

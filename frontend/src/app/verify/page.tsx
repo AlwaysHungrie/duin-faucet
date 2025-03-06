@@ -58,6 +58,12 @@ export default function VerifyPage() {
     if (attestationData) {
       return
     }
+
+    if (attestation.startsWith('https://public-tlsn-notary-test.s3.ap-south-1.amazonaws.com/')) {
+      getAttestationData(attestation)
+      return
+    }
+
     const keys = attestation.split('/')
     const fileKey = keys[keys.length - 1]
     const bucketKey = keys[keys.length - 2]

@@ -1,5 +1,5 @@
 export const HOME_PAGE = {
   TITLE: 'Duin',
-  SUBTITLE: 'Venture into the stream of unknown,',
-  SUBTITLE_2: 'Every drop will make your ideas bloom',
+  SUBTITLE: 'Welcome builder, here is where Duin and his minions await',
+  SUBTITLE_2: 'Share your vision and unlock rewards to elevate your fate',
 }
