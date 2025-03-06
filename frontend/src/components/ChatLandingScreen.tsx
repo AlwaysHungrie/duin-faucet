@@ -1,3 +1,4 @@
+import { CHAT_LANDING_SCREEN } from '@/copy/chatLandingScreen'
 import CrystalBall from 'react-crystal-ball'
 
 export default function ChatLandingScreen({ isMobile }: { isMobile: boolean }) {
@@ -13,12 +14,12 @@ export default function ChatLandingScreen({ isMobile }: { isMobile: boolean }) {
             <CrystalBall size={100} colorPalette={1} speed={1.5} />
           </div>
           <h2 className="text-xl font-medium mb-2">
-            Chat with Duin and its minions
+            {CHAT_LANDING_SCREEN.TITLE}
           </h2>
           <p className="text-gray-500 mb-4 max-w-sm mx-auto">
-            You only get 10 messages per day to chat with Duin and its minions.
-            It&apos;s best to chat with the minions first and get your
-            attestations before messaging Duin.
+            {CHAT_LANDING_SCREEN.SUBTITLE}
+            &nbsp;
+            {CHAT_LANDING_SCREEN.SUBTITLE_2}
           </p>
         </div>
       </div>
