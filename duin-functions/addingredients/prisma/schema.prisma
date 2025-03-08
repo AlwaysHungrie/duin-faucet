@@ -1,0 +1,29 @@
+generator client {
+  provider      = "prisma-client-js"
+  binaryTargets = ["native", "linux-arm64-openssl-1.0.x"]
+}
+
+datasource db {
+  provider          = "postgresql"
+  url               = env("DATABASE_URL")
+  shadowDatabaseUrl = env("SHADOW_DATABASE_URL")
+}
+
+model Contract {
+  address String @id
+}
+
+model Ingredient {
+  id        String   @id @default(uuid())
+  name      String   @unique
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+}
+
+model ImageUrl {
+  id                    String   @id @default(uuid())
+  url                   String
+  sortedIngredientsList String
+  createdAt             DateTime @default(now())
+  updatedAt             DateTime @updatedAt
+}
