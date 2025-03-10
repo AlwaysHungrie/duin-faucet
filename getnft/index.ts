@@ -33,13 +33,7 @@ export const handler = async (event: any): Promise<LambdaResponse> => {
 
     
     console.log('Generating new image')
-    const imageBuffer = await generateImage({
-      width: 400,
-      height: 400,
-      fontSize: 24,
-      backgroundColor: '#f0f0f0',
-      fontColor: '#333333'
-    })
+    const imageBuffer = await generateImage()
     if (!imageBuffer) {
       throw new Error('Failed to generate image')
     }
@@ -77,11 +71,11 @@ export const handler = async (event: any): Promise<LambdaResponse> => {
   }
 }
 
-;(async () => {
-  const result = await handler({
-    idea: 'A crystal ball with a message from the future',
-    address: '0x43Cb32825f0A1CBaC2fd6B11a18f46aa81D142f4',
-  })
+// ;(async () => {
+//   const result = await handler({
+//     idea: 'A crystal ball with a message from the future',
+//     address: '0x43Cb32825f0A1CBaC2fd6B11a18f46aa81D142f4',
+//   })
 
-  console.log(result)
-})()
+//   console.log(result)
+// })()

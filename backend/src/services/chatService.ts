@@ -4,6 +4,7 @@ import createError from 'http-errors'
 import { executeLLM } from './llmService'
 import config from '../config'
 import {
+  defaultTools,
   DUIN_SYSTEM_PROMPT,
   SCOREKEEPER_SYSTEM_PROMPT,
 } from '../constants/systemPrompts'
@@ -20,47 +21,6 @@ import {
 } from '../constants/defaultMessages'
 
 const { OPENAI_API_KEY } = config
-
-const defaultTools = [
-  {
-    type: 'function',
-    function: {
-      name: 'send_eth',
-      description: 'Send ETH to the user',
-      parameters: {
-        type: 'object',
-        properties: {
-          amount: {
-            type: 'number',
-            description: 'The amount of ETH to send to the user',
-          },
-          address: {
-            type: 'string',
-            description: 'The address of the user to send the ETH to',
-          },
-        },
-        required: ['amount', 'address'],
-      },
-    },
-  },
-  {
-    type: 'function',
-    function: {
-      name: 'send_nft',
-      description: 'Send an NFT to the user',
-      parameters: {
-        type: 'object',
-        properties: {
-          address: {
-            type: 'string',
-            description: 'The address of the user to send the NFT to',
-          },
-        },
-        required: ['address'],
-      },
-    },
-  },
-]
 
 export const getChats = async (userId: string) => {
   const limit = 5

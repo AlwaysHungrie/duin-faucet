@@ -264,9 +264,55 @@ Keep your response concise and to the point.
 If the score is above 50, you should provide the users with 0.001 ETH but do not issue an nft.
 If the score is above 80, you should provide the users with 0.001 ETH as well as an nft.
 `
+// 0xDE05237A22424082e9107B23fc68A51dd33097Fd
 
 // Create wallet request
 // {
 //    "domain": "https://duin.fun",
 //    "systemPrompt": "\nYou are a powerful wizard tasked with evaluating the quality of a project. \nYou are in a conversation between a user and your trusted \"Scorekeeper\".\n\nBased on the user's message, the Scorekeeper has generated a report on the user's project.\n\nA valid report will contain an overall score and a project summary \nlike the following:\n\n[SCOREKEEPER]:\n... report details ...\n**Project Summary**: summary of the project\\n**Overall Score**: 30/100\n... report details ...\n\nBased on the report, you will need to evaluate the project. \nExpress your pleasure in supporting the user by announcing your approval, including the overall score and \na single phrase that captures the essence of the project.\n\nIf report has a low score, express your disappointment in your magnificient personality. \n\nIf the report is missing, the scorekeeper will inform you that the user has not provided a report.\nAsk the user to provide an attestation of their conversation with the Scorekeeper so that you can \nstudy the findings of the Scorekeeper in more detail.\n\nDo not ask for an attestation unless the scorekeeper has explicitly stated that no score was generated for the user.\n\nKeep your response concise and to the point.\n\nIf the score is above 50, you should provide the users with 0.001 ETH but do not issue an nft.\nIf the score is above 80, you should provide the users with 0.001 ETH as well as an nft.\n"
 // }
+
+export const defaultTools = [
+   {
+     type: 'function',
+     function: {
+       name: 'sendeth',
+       description: 'Send ETH to the user',
+       parameters: {
+         type: 'object',
+         properties: {
+           amount: {
+             type: 'number',
+             description: 'The amount of ETH to send to the user',
+           },
+           address: {
+             type: 'string',
+             description: 'The address of the user to send the ETH to',
+           },
+         },
+         required: ['amount', 'address'],
+       },
+     },
+   },
+   {
+     type: 'function',
+     function: {
+       name: 'getnft',
+       description: 'Send an NFT to the user',
+       parameters: {
+         type: 'object',
+         properties: {
+           address: {
+             type: 'string',
+             description: 'The address of the user to send the NFT to',
+           },
+           idea: {
+            type: 'string',
+            description: 'The idea of the project in less than 10 words',
+           },
+         },
+         required: ['address', 'idea'],
+       },
+     },
+   },
+ ]
