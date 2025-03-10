@@ -10,11 +10,16 @@ export default function ChatInput({
   onChange,
   onSubmit,
   disabled,
+  allowAttestations,
 }: {
   value: string
   onChange: (value: string) => void
-  onSubmit: (e: React.FormEvent<HTMLFormElement>, filesData: { name: string; url: string }[]) => void
+  onSubmit: (
+    e: React.FormEvent<HTMLFormElement>,
+    filesData: { name: string; url: string }[]
+  ) => void
   disabled: boolean
+  allowAttestations: boolean
 }) {
   const { jwtToken } = usePrivyAuth()
   const [files, setFiles] = useState<File[]>([])
@@ -22,7 +27,9 @@ export default function ChatInput({
   const [uploadedFiles, setUploadedFiles] = useState<
     { name: string; url: string }[]
   >([])
-  const [uploadProgress, setUploadProgress] = useState<{ [key: string]: number }>({})
+  const [uploadProgress, setUploadProgress] = useState<{
+    [key: string]: number
+  }>({})
 
   const handleFileChange = useCallback(
     async (e: React.ChangeEvent<HTMLInputElement>) => {
@@ -37,7 +44,7 @@ export default function ChatInput({
         acc[file.name] = 0
         return acc
       }, {} as { [key: string]: number })
-      
+
       setUploadProgress((prev) => ({ ...prev, ...initialProgress }))
 
       const uploadUrls = await Promise.all(
@@ -65,42 +72,40 @@ export default function ChatInput({
         const uploadPromises = uploadUrls.map(async (url, index) => {
           const file = selectedFiles[index]
           const fileType = file.type ?? 'application/octet-stream'
-          const response = await axios.put(
-            url.uploadUrl,
-            file,
-            {
-              headers: {
-                'Content-Type': fileType,
-              },
-              // This is important to show upload progress and handle timeouts for large files
-              onUploadProgress: (progressEvent) => {
-                const percentCompleted = Math.round(
-                  (progressEvent.loaded * 100) / (progressEvent.total ?? 1)
-                )
-                console.log(`Upload progress for ${file.name}: ${percentCompleted}%`)
-                setUploadProgress((prev) => ({
-                  ...prev,
-                  [file.name]: percentCompleted,
-                }))
-              },
-            }
-          )
-          
+          const response = await axios.put(url.uploadUrl, file, {
+            headers: {
+              'Content-Type': fileType,
+            },
+            // This is important to show upload progress and handle timeouts for large files
+            onUploadProgress: (progressEvent) => {
+              const percentCompleted = Math.round(
+                (progressEvent.loaded * 100) / (progressEvent.total ?? 1)
+              )
+              console.log(
+                `Upload progress for ${file.name}: ${percentCompleted}%`
+              )
+              setUploadProgress((prev) => ({
+                ...prev,
+                [file.name]: percentCompleted,
+              }))
+            },
+          })
+
           // Add to uploaded files when complete
           setUploadedFiles((prev) => [
-            ...prev, 
-            { 
-              name: file.name, 
-              url: url.publicUrl || url.uploadUrl.split('?')[0] 
-            }
+            ...prev,
+            {
+              name: file.name,
+              url: url.publicUrl || url.uploadUrl.split('?')[0],
+            },
           ])
-          
+
           return response.data
         })
 
         await Promise.all(uploadPromises)
         console.log('Files uploaded successfully')
-        
+
         // Clear files array since they're now in uploadedFiles
         setFiles([])
       } catch (error) {
@@ -130,9 +135,12 @@ export default function ChatInput({
     if (disabled || isUploading) return
 
     // Now we pass both the message and the uploaded file URLs
-    const filesData = uploadedFiles.map(file => ({ name: file.name, url: file.url }))
+    const filesData = uploadedFiles.map((file) => ({
+      name: file.name,
+      url: file.url,
+    }))
     onSubmit(e, filesData)
-    
+
     // Clear uploaded files after submission if needed
     setUploadedFiles([])
   }
@@ -141,7 +149,9 @@ export default function ChatInput({
     // Default preview for other file types
     return (
       <div className="h-16 w-16 flex items-center justify-center bg-gray-100 rounded">
-        <span className="text-xs font-medium">{file.name.split('.').pop()?.toUpperCase()}</span>
+        <span className="text-xs font-medium">
+          {file.name.split('.').pop()?.toUpperCase()}
+        </span>
       </div>
     )
   }
@@ -176,7 +186,9 @@ export default function ChatInput({
                         className="stroke-blue-500"
                         strokeWidth="2"
                         strokeDasharray="100"
-                        strokeDashoffset={100 - (uploadProgress[file.name] || 0)}
+                        strokeDashoffset={
+                          100 - (uploadProgress[file.name] || 0)
+                        }
                         transform="rotate(-90 18 18)"
                       />
                     </svg>
@@ -198,16 +210,20 @@ export default function ChatInput({
                 <X className="h-3 w-3" />
               </Button>
               <div className="mt-1 text-xs text-center truncate max-w-16">
-                {file.name.length > 15 ? `${file.name.substring(0, 12)}...` : file.name}
+                {file.name.length > 15
+                  ? `${file.name.substring(0, 12)}...`
+                  : file.name}
               </div>
             </div>
           ))}
-          
+
           {/* Uploaded files */}
           {uploadedFiles.map((file) => (
             <div key={`uploaded-${file.name}`} className="relative group">
               <div className="h-16 w-16 flex items-center justify-center bg-gray-100 rounded">
-                <span className="text-xs font-medium">{file.name.split('.').pop()?.toUpperCase()}</span>
+                <span className="text-xs font-medium">
+                  {file.name.split('.').pop()?.toUpperCase()}
+                </span>
               </div>
               <Button
                 type="button"
@@ -219,7 +235,9 @@ export default function ChatInput({
                 <X className="h-3 w-3" />
               </Button>
               <div className="mt-1 text-xs text-center truncate max-w-16">
-                {file.name.length > 15 ? `${file.name.substring(0, 12)}...` : file.name}
+                {file.name.length > 15
+                  ? `${file.name.substring(0, 12)}...`
+                  : file.name}
               </div>
             </div>
           ))}
@@ -230,28 +248,32 @@ export default function ChatInput({
         onSubmit={handleSubmit}
         className="flex items-center gap-1 sm:gap-2"
       >
-        <input
-          type="file"
-          id="file-upload"
-          multiple
-          className="hidden"
-          onChange={handleFileChange}
-          disabled={disabled || isUploading}
-        />
-        <label htmlFor="file-upload">
-          <Button
-            type="button"
-            variant="ghost"
-            size="icon"
-            className={`${isUploading ? 'opacity-50' : ''} flex`}
-            disabled={disabled || isUploading}
-            onClick={() => {
-              document.getElementById('file-upload')?.click()
-            }}
-          >
-            <Paperclip className="h-5 w-5 text-gray-500" />
-          </Button>
-        </label>
+        {allowAttestations && (
+          <>
+            <input
+              type="file"
+              id="file-upload"
+              multiple
+              className="hidden"
+              onChange={handleFileChange}
+              disabled={disabled || isUploading}
+            />
+            <label htmlFor="file-upload">
+              <Button
+                type="button"
+                variant="ghost"
+                size="icon"
+                className={`${isUploading ? 'opacity-50' : ''} flex`}
+                disabled={disabled || isUploading}
+                onClick={() => {
+                  document.getElementById('file-upload')?.click()
+                }}
+              >
+                <Paperclip className="h-5 w-5 text-gray-500" />
+              </Button>
+            </label>
+          </>
+        )}
 
         <Input
           placeholder={isUploading ? 'Uploading files...' : 'Type a message'}

@@ -202,7 +202,8 @@ export function PrivyAuthProvider({ children }: { children: ReactNode }) {
 
         return tokenData
       } catch (error) {
-        console.error('Error getting JWT token:', error)
+        console.log('Error getting JWT token:', error)
+        logout()
         return null
       }
     },

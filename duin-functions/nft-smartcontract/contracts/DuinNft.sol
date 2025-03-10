@@ -5,14 +5,14 @@ import "@openzeppelin/contracts/token/ERC721/extensions/ERC721URIStorage.sol";
 import "@openzeppelin/contracts/access/Ownable.sol";
 import "@openzeppelin/contracts/utils/Strings.sol";
 
-contract ChunkyNft is ERC721URIStorage, Ownable {
+contract DuinNft is ERC721URIStorage, Ownable {
     // Track the next token ID
     uint256 private _nextTokenId;
     
     // Events for minting and transferring
     event NFTMinted(uint256 tokenId, address recipient, string tokenURI);
     
-    constructor() ERC721("ChunkySoup", "CHUNKY_SOUP") Ownable(msg.sender) {}
+    constructor() ERC721("CrystallBall", "CRYSTALL_BALL") Ownable(msg.sender) {}
     
     /**
      * @dev Mint a new NFT and assign it to the contract owner

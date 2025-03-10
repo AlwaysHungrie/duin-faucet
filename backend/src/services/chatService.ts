@@ -211,7 +211,7 @@ export const addUserMessage = async (
     throw createError(404, 'Chat not found')
   }
 
-  if (chat.messagesRemaining <= 0) {
+  if (chat.totalMessagesAllowed > -1 && chat.messagesRemaining <= 0) {
     throw createError(400, 'Chat has no remaining messages')
   }
 
@@ -235,6 +235,7 @@ export const addUserMessage = async (
   let attestation = ''
   let tools = ''
   let attestationWithoutTools = ''
+
   if (chat.name === 'scorekeeper') {
     const { llm_response, attestation_url } = await executeLLM({
       url: 'https://api.openai.com/v1/chat/completions',
@@ -276,7 +277,7 @@ export const addUserMessage = async (
       )
     ).filter((data) => Boolean(data))
 
-    let scorekeeperMessage = '[SCOREKEEPER]: No score generated for this user'
+    let scorekeeperMessage = '[SCOREKEEPER]: No report generated for this user'
     if (verifiedAttestationData.length > 0) {
       scorekeeperMessage = `[SCOREKEEPER]:\n ${verifiedAttestationData[0]}`
     }
@@ -314,7 +315,7 @@ export const addUserMessage = async (
           { role: 'user', content: message },
           { role: 'user', content: scorekeeperMessage },
         ],
-        model: 'gpt-4o-mini',
+        model: 'gpt-4o',
         max_tokens: 1000,
         tools: defaultTools,
       },
@@ -327,6 +328,19 @@ export const addUserMessage = async (
       attestation = attestation_url_tools
       attestationWithoutTools = attestation_url
       tools = JSON.stringify(toolsUsed)
+    }
+  }
+
+  if (chat.name === 'self') {
+    return {
+      messageId: new Date().getTime().toString(),
+      content: '',
+      role: '',
+      timestamp: new Date(),
+      chatId,
+      attestation: null,
+      tools: null,
+      attestationWithoutTools: null,
     }
   }
 

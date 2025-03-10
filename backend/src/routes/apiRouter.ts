@@ -12,7 +12,7 @@ router.use('/user', userRouter)
 router.use('/verifier', verifierRouter)
 // Global error handling middleware
 router.use((err: any, req: express.Request, res: express.Response, next: express.NextFunction) => {
-  console.error('Auth Error:', err)
+  // console.error('Auth Error:', err)
 
   // Default to 500 if no status code is set
   const status = err.status || err.statusCode || 500

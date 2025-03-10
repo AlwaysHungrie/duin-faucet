@@ -5,6 +5,7 @@ import { usePrivyAuth } from '@/hooks/usePrivyAuth'
 import { useEffect, useState } from 'react'
 import { useRef } from 'react'
 import { formatAddress } from '@/utils/formatting'
+import { useChatStore } from '@/providers/chat'
 
 export const formatChatName = (name: string) => {
   return name.charAt(0).toUpperCase() + name.slice(1)
@@ -25,6 +26,7 @@ export default function ChatItem({
 }) {
   const [dropdownOpen, setDropdownOpen] = useState(false)
   const dropdownRef = useRef<HTMLDivElement>(null)
+  const { setActiveChat } = useChatStore()
 
   const { authenticatedUser: user, logout, isLoading } = usePrivyAuth()
   const address = user && user.wallet?.address
@@ -33,6 +35,7 @@ export default function ChatItem({
     logout()
     setDropdownOpen(false)
     clearChats()
+    setActiveChat('')
   }
 
   // Close dropdown when clicking outside

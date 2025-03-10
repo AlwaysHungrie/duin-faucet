@@ -1,5 +1,5 @@
 import { Button } from '@/components/ui/button'
-import { ArrowLeft, LucideInfo, LucideTrash } from 'lucide-react'
+import { ArrowLeft, LucideTrash } from 'lucide-react'
 import { Chat } from './types'
 import { formatChatName } from './chatItem'
 
@@ -29,11 +29,13 @@ export default function ChatHeader({
         </div>
       </div>
 
-      <div className="text-sm text-gray-500 ml-auto">
-        {chat.messagesRemaining} / {chat.totalMessagesAllowed}
-      </div>
-
-      <LucideInfo className="h-5 w-5 text-gray-400 ml-2" />
+      {chat.totalMessagesAllowed > 0 ? (
+        <div className="text-sm text-gray-500 ml-auto">
+          {chat.messagesRemaining} / {chat.totalMessagesAllowed}
+        </div>
+      ) : (
+        <div className="ml-auto" />
+      )}
 
       <Button variant="ghost" size="icon" onClick={onClearChatClick}>
         <LucideTrash className="h-5 w-5 text-gray-400" />

@@ -113,9 +113,8 @@ export default function VerifyPage() {
     )
     const recvJson = recv
       .split('\r\n')
-      .filter((line) => {
-        const isNaturalNumber = /^([1-9]\d*|0)$/.test(line)
-        return !isNaturalNumber
+      .filter((_, i) => {
+        return i % 2 === 0
       })
       .join('')
     const jsonResponse = parseIfJson(recvJson)

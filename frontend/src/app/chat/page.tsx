@@ -7,13 +7,14 @@ import ChatLandingScreen from '@/components/ChatLandingScreen'
 import { useMediaQuery } from '@/hooks/useMediaQuery'
 import { usePrivyAuth } from '@/hooks/usePrivyAuth'
 import { useChatStore } from '@/providers/chat'
-import axios from 'axios'
+import axios, { AxiosError } from 'axios'
 import { useCallback, useEffect, useMemo, useRef, useState } from 'react'
 
 const chatOrder = ['self', 'scorekeeper', 'duin', 'towncrier']
 
 export default function ChatHome() {
-  const { jwtToken } = usePrivyAuth()
+  const { jwtToken, authenticatedUser: user } = usePrivyAuth()
+  const address = user && user.wallet?.address
   const {
     chats,
     activeChat,
@@ -104,7 +105,10 @@ export default function ChatHome() {
     async (message: string) => {
       if (!activeChat) return
       setInputMessage('')
-      setIsTyping(true)
+      const currentChat = chats.find((chat: Chat) => chat.chatId === activeChat)
+      if (currentChat?.name !== 'self') {
+        setIsTyping(true)
+      }
 
       const newMessage: Message = {
         messageId: crypto.randomUUID(),
@@ -125,27 +129,54 @@ export default function ChatHome() {
 
       setChats(updatedChats)
 
-      const response = await axios.post(
-        `${process.env.NEXT_PUBLIC_BACKEND_URL}/chat/message`,
-        {
-          chatId: activeChat,
-          message,
-        },
-        {
-          headers: {
-            Authorization: `Bearer ${jwtToken}`,
+      try {
+        const response = await axios.post(
+          `${process.env.NEXT_PUBLIC_BACKEND_URL}/chat/message`,
+          {
+            chatId: activeChat,
+            message,
           },
-        }
-      )
+          {
+            headers: {
+              Authorization: `Bearer ${jwtToken}`,
+            },
+          }
+        )
 
-      const data = response.data
-      if (data.success) {
-        const responseMessage = data.responseMessage
-        handleResponseMessage(activeChat, responseMessage, newMessage.messageId)
+        const data = response.data
+        if (data.success) {
+          const responseMessage = data.responseMessage
+          if (!responseMessage.role) return
+          handleResponseMessage(
+            activeChat,
+            responseMessage,
+            newMessage.messageId
+          )
+          setIsTyping(false)
+          return
+        }
+      } catch (error) {
+        if (error instanceof AxiosError) {
+          console.log('Error:', error.response?.data)
+          if (
+            error.response?.data.message === 'Chat has no remaining messages'
+          ) {
+            handleResponseMessage(
+              activeChat,
+              {
+                content:
+                  'Daily message limit reached, please try again tomorrow.',
+                role: 'assistant',
+                timestamp: new Date().toISOString(),
+                messageId: new Date().getTime().toString(),
+              },
+              newMessage.messageId
+            )
+          }
+        }
+      } finally {
         setIsTyping(false)
-        return
       }
-      setIsTyping(false)
     },
     [activeChat, chats, setChats, handleResponseMessage, jwtToken]
   )
@@ -257,7 +288,7 @@ export default function ChatHome() {
           handleDeleteUser={handleDeleteUser}
         />
 
-        {!activeChat && <ChatLandingScreen isMobile={isMobile} />}
+        {(!activeChat || !address) && <ChatLandingScreen isMobile={isMobile} />}
 
         {currentChat && (
           <ChatArea

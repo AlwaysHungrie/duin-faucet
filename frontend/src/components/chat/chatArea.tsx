@@ -88,7 +88,11 @@ const ChatArea = forwardRef<
         value={inputMessage}
         onChange={setInputMessage}
         onSubmit={handleSubmit}
-        disabled={isTyping || chat.messagesRemaining <= 0}
+        allowAttestations={chat.name === 'duin'}
+        disabled={
+          isTyping ||
+          (chat.totalMessagesAllowed > -1 && chat.messagesRemaining <= 0)
+        }
       />
     </div>
   )
