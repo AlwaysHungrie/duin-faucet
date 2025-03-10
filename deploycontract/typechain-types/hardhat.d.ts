@@ -70,9 +70,9 @@ declare module "hardhat/types/runtime" {
       signerOrOptions?: ethers.Signer | FactoryOptions
     ): Promise<Contracts.Strings__factory>;
     getContractFactory(
-      name: "ChunkyNft",
+      name: "DuinNft",
       signerOrOptions?: ethers.Signer | FactoryOptions
-    ): Promise<Contracts.ChunkyNft__factory>;
+    ): Promise<Contracts.DuinNft__factory>;
 
     getContractAt(
       name: "Ownable",
@@ -145,10 +145,10 @@ declare module "hardhat/types/runtime" {
       signer?: ethers.Signer
     ): Promise<Contracts.Strings>;
     getContractAt(
-      name: "ChunkyNft",
+      name: "DuinNft",
       address: string | ethers.Addressable,
       signer?: ethers.Signer
-    ): Promise<Contracts.ChunkyNft>;
+    ): Promise<Contracts.DuinNft>;
 
     deployContract(
       name: "Ownable",
@@ -207,9 +207,9 @@ declare module "hardhat/types/runtime" {
       signerOrOptions?: ethers.Signer | DeployContractOptions
     ): Promise<Contracts.Strings>;
     deployContract(
-      name: "ChunkyNft",
+      name: "DuinNft",
       signerOrOptions?: ethers.Signer | DeployContractOptions
-    ): Promise<Contracts.ChunkyNft>;
+    ): Promise<Contracts.DuinNft>;
 
     deployContract(
       name: "Ownable",
@@ -282,10 +282,10 @@ declare module "hardhat/types/runtime" {
       signerOrOptions?: ethers.Signer | DeployContractOptions
     ): Promise<Contracts.Strings>;
     deployContract(
-      name: "ChunkyNft",
+      name: "DuinNft",
       args: any[],
       signerOrOptions?: ethers.Signer | DeployContractOptions
-    ): Promise<Contracts.ChunkyNft>;
+    ): Promise<Contracts.DuinNft>;
 
     // default types
     getContractFactory(

@@ -1,4 +1,4 @@
-import { ChunkyNft__factory } from './typechain-types'
+import { DuinNft__factory } from './typechain-types'
 import { config } from './config'
 
 interface LambdaResponse {
@@ -11,10 +11,10 @@ interface LambdaResponse {
 }
 
 const {
-  BASE_SEPOLIA_RPC_URL,
+  SCROLL_SEPOLIA_RPC_URL,
 } = config
 
-const contract = new ChunkyNft__factory()
+const contract = new DuinNft__factory()
 
 export const handler = async (event: any): Promise<LambdaResponse> => {
   try {
@@ -30,7 +30,7 @@ export const handler = async (event: any): Promise<LambdaResponse> => {
       jsonResult: null,
       transaction: {
         txnRequest,
-        rpcUrl: BASE_SEPOLIA_RPC_URL,
+        rpcUrl: SCROLL_SEPOLIA_RPC_URL,
       },
     }
   } catch (error) {

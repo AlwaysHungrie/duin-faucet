@@ -1,4 +1,4 @@
-# Chunky NFT Smart Contracts
+# NFT Smart Contract
 
 compile:
 npx hardhat compile

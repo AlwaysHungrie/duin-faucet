@@ -34,5 +34,5 @@ export type { SafeCast } from "./@openzeppelin/contracts/utils/math/SafeCast";
 export { SafeCast__factory } from "./factories/@openzeppelin/contracts/utils/math/SafeCast__factory";
 export type { Strings } from "./@openzeppelin/contracts/utils/Strings";
 export { Strings__factory } from "./factories/@openzeppelin/contracts/utils/Strings__factory";
-export type { ChunkyNft } from "./contracts/ChunkyNft";
-export { ChunkyNft__factory } from "./factories/contracts/ChunkyNft__factory";
+export type { DuinNft } from "./contracts/DuinNft";
+export { DuinNft__factory } from "./factories/contracts/DuinNft__factory";

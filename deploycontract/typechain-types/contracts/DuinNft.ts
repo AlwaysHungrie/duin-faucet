@@ -23,7 +23,7 @@ import type {
   TypedContractMethod,
 } from "../common";
 
-export interface ChunkyNftInterface extends Interface {
+export interface DuinNftInterface extends Interface {
   getFunction(
     nameOrSignature:
       | "approve"
@@ -304,11 +304,11 @@ export namespace TransferEvent {
   export type LogDescription = TypedLogDescription<Event>;
 }
 
-export interface ChunkyNft extends BaseContract {
-  connect(runner?: ContractRunner | null): ChunkyNft;
+export interface DuinNft extends BaseContract {
+  connect(runner?: ContractRunner | null): DuinNft;
   waitForDeployment(): Promise<this>;
 
-  interface: ChunkyNftInterface;
+  interface: DuinNftInterface;
 
   queryFilter<TCEvent extends TypedContractEvent>(
     event: TCEvent,
