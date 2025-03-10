@@ -18,7 +18,7 @@ export const mintNft = async (address: string, metadataUrl: string) => {
   }
   return {
     txnRequest,
-    rpcUrl: BASE_SEPOLIA_RPC_URL,
+    rpcUrl: BASE_SEPOLIA_RPC_URL!,
   }
   // const receipt = await tx.wait()
   // if (!receipt) {
