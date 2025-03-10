@@ -33,22 +33,23 @@ export const handler = async (event: any): Promise<LambdaResponse> => {
 
     
     console.log('Generating new image')
-    const imageBuffer = await generateImage()
-    if (!imageBuffer) {
-      throw new Error('Failed to generate image')
-    }
+    // const imageBuffer = await generateImage()
+    // if (!imageBuffer) {
+    //   throw new Error('Failed to generate image')
+    // }
 
-    console.log('Uploading image to S3')
-    const { s3Url: newS3Url, filename: newFilename } = await uploadImageToS3(
-      imageBuffer
-    )
-    if (!newS3Url) {
-      throw new Error('Failed to upload image to S3')
-    }
+    // console.log('Uploading image to S3')
+    // const { s3Url: newS3Url, filename: newFilename } = await uploadImageToS3(
+    //   imageBuffer
+    // )
+    // if (!newS3Url) {
+    //   throw new Error('Failed to upload image to S3')
+    // }
 
-    const s3Url = newS3Url
-    const filename = newFilename
-    
+    // const s3Url = newS3Url
+    // const filename = newFilename
+
+    const s3Url = 'https://chunky-images.s3.ap-south-1.amazonaws.com/images/e436e166-bd10-437a-8704-30d22cc14012.png'    
     const { s3MetadataUrl } = await uploadMetadataToS3(idea, s3Url)
     if (!s3MetadataUrl) {
       throw new Error('Failed to upload metadata to S3')
@@ -75,11 +76,11 @@ export const handler = async (event: any): Promise<LambdaResponse> => {
   }
 }
 
-// ;(async () => {
-//   const result = await handler({
-//     idea: 'A crystal ball with a message from the future',
-//     address: '0x43Cb32825f0A1CBaC2fd6B11a18f46aa81D142f4',
-//   })
+;(async () => {
+  const result = await handler({
+    idea: 'A crystal ball with a message from the future',
+    address: '0x43Cb32825f0A1CBaC2fd6B11a18f46aa81D142f4',
+  })
 
-//   console.log(result)
-// })()
+  console.log(result)
+})()

@@ -3,7 +3,7 @@ import path from 'path'
 
 
 export async function generateImage() {
-  const imagePath =  path.join(__dirname, 'ball.png')
+  const imagePath =  path.join(__dirname, 'ball.gif')
   console.log(imagePath)
 
   const buffer = fs.readFileSync(imagePath)
