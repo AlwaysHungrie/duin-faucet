@@ -1,13 +1,10 @@
 import { config } from '../config'
 import { DuinNft__factory } from '../typechain-types'
-import { ethers } from 'ethers'
-import prisma from '../prismaClient'
 
 const { BASE_SEPOLIA_RPC_URL } = config
 
 export const mintNft = async (address: string, metadataUrl: string) => {
-  const contracts = await prisma.contract.findMany()
-  const contractAddress = contracts[0].address
+  const contractAddress = '0xe57A95e5B6Ed5Dbe579C18A396De299E6Cd1953a'
   const contract = DuinNft__factory.connect(contractAddress)
   const unsignedTx = await contract.mintAndTransfer.populateTransaction(
     address,
@@ -43,8 +40,7 @@ export const mintNft = async (address: string, metadataUrl: string) => {
 }
 
 export const burnNft = async (tokenId: string) => {
-  const contracts = await prisma.contract.findMany()
-  const contractAddress = contracts[0].address
+  const contractAddress = '0xe57A95e5B6Ed5Dbe579C18A396De299E6Cd1953a'
   const contract = DuinNft__factory.connect(contractAddress)
   
   const tx = await contract.burnNFT(BigInt(tokenId))

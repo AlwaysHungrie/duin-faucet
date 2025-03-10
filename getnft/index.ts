@@ -1,6 +1,6 @@
 import { generateImage } from './services/imageGenerate'
 import { uploadImageToS3, uploadMetadataToS3 } from './services/s3'
-// import { mintNft } from './services/nft'
+import { mintNft } from './services/nft'
 
 interface GenerateImageRequest {
   idea: string
@@ -55,7 +55,7 @@ export const handler = async (event: any): Promise<LambdaResponse> => {
     }
 
     console.log('Minting NFT')
-    // const { txnRequest, rpcUrl } = await mintNft(address, s3MetadataUrl)
+    const { txnRequest, rpcUrl } = await mintNft(address, s3MetadataUrl)
     return {
       error: null,
       jsonResult: {
