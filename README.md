@@ -1,0 +1,71 @@
+# Installation
+
+### Install node 
+
+curl -o- https://raw.githubusercontent.com/nvm-sh/nvm/v0.39.7/install.sh | bash
+close and reopen the terminal
+nvm install --lts
+
+### Install postgres
+
+sudo apt update && sudo apt install postgresql postgresql-contrib
+sudo systemctl start postgresql && sudo systemctl daemon-reload && sudo systemctl enable postgresql
+sudo -u postgres psql
+CREATE USER pg1 WITH PASSWORD 'pg1';
+CREATE DATABASE "duin-dev";
+
+use DATABASE_URL="postgresql://pg1:pg1@localhost:5432/duin-dev?schema=public"
+
+### Install nginx
+
+sudo apt update
+sudo apt install nginx && sudo systemctl start nginx && sudo systemctl enable nginx
+sudo apt install certbot python3-certbot-nginx
+
+sudo vim /etc/nginx/sites-available/duin.fun
+
+server {
+    listen 80;
+    server_name duin.fun www.duin.fun;
+
+    location / {
+        proxy_pass http://localhost:3000;
+        proxy_http_version 1.1;
+        proxy_set_header Upgrade $http_upgrade;
+        proxy_set_header Connection 'upgrade';
+        proxy_set_header Host $host;
+        proxy_cache_bypass $http_upgrade;
+    }
+}
+
+sudo vim /etc/nginx/sites-available/api.duin.fun
+
+server {
+    listen 80;
+    server_name api.duin.fun;
+
+    location / {
+        proxy_pass http://localhost:3002;
+        proxy_http_version 1.1;
+        proxy_set_header Upgrade $http_upgrade;
+        proxy_set_header Connection 'upgrade';
+        proxy_set_header Host $host;
+        proxy_cache_bypass $http_upgrade;
+    }
+}
+
+sudo ln -s /etc/nginx/sites-available/duin.fun /etc/nginx/sites-enabled/
+sudo ln -s /etc/nginx/sites-available/api.duin.fun /etc/nginx/sites-enabled/
+sudo nginx -t  # Test the configuration
+sudo systemctl reload nginx
+
+sudo certbot --nginx -d duin.fun -d www.duin.fun
+sudo certbot --nginx -d api.duin.fun
+
+### Install pm2
+
+npm install -g pm2
+
+### Install pnpm
+
+npm install -g pnpm@latest-10

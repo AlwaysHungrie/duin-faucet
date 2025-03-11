@@ -3,10 +3,10 @@
 import { usePrivyAuth } from '@/hooks/usePrivyAuth'
 import { Loader, LucideAlertTriangle } from 'lucide-react'
 import { useSearchParams } from 'next/navigation'
-import { useCallback, useEffect, useMemo, useState } from 'react'
+import { Suspense, useCallback, useEffect, useMemo, useState } from 'react'
 import axios from 'axios'
 
-export default function VerifyPage() {
+function VerifyPage() {
   const { jwtToken } = usePrivyAuth()
   const searchParams = useSearchParams()
   const attestation = useMemo(
@@ -211,5 +211,13 @@ export default function VerifyPage() {
         {renderAttestationData()}
       </div>
     </div>
+  )
+}
+
+export default function VerifyPageWrapper() {
+  return (
+    <Suspense>
+      <VerifyPage />
+    </Suspense>
   )
 }
