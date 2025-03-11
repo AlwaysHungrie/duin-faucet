@@ -69,3 +69,19 @@ npm install -g pm2
 ### Install pnpm
 
 npm install -g pnpm@latest-10
+
+### Install frontend
+
+sudo fallocate -l 2G /swapfile
+sudo chmod 600 /swapfile
+sudo mkswap /swapfile
+sudo swapon /swapfile
+echo '/swapfile none swap sw 0 0' | sudo tee -a /etc/fstab
+
+cd frontend
+pnpm install
+pnpm run build
+
+PORT=3000 pm2 start npm --name "duin-frontend" -- start
+
+
