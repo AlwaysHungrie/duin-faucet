@@ -1,10 +1,10 @@
 import { config } from '../config'
 import { DuinNft__factory } from '../typechain-types'
 
-const { BASE_SEPOLIA_RPC_URL } = config
+const { BASE_SEPOLIA_RPC_URL, CONTRACT_ADDRESS } = config
 
 export const mintNft = async (address: string, metadataUrl: string) => {
-  const contractAddress = '0xe57A95e5B6Ed5Dbe579C18A396De299E6Cd1953a'
+  const contractAddress = CONTRACT_ADDRESS
   const contract = DuinNft__factory.connect(contractAddress)
   const unsignedTx = await contract.mintAndTransfer.populateTransaction(
     address,
@@ -40,7 +40,7 @@ export const mintNft = async (address: string, metadataUrl: string) => {
 }
 
 export const burnNft = async (tokenId: string) => {
-  const contractAddress = '0xe57A95e5B6Ed5Dbe579C18A396De299E6Cd1953a'
+  const contractAddress = CONTRACT_ADDRESS
   const contract = DuinNft__factory.connect(contractAddress)
   
   const tx = await contract.burnNFT(BigInt(tokenId))

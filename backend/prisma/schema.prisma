@@ -55,5 +55,8 @@ model Message {
   attestation String?
   tools String?
   attestationWithoutTools String?
+
+  attestationHash String?
+  executed Boolean @default(false)
 }
 
