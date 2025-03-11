@@ -19,7 +19,6 @@ const {
   SCROLL_SEPOLIA_RPC_URL,
 } = config
 
-
 export const handler = async (event: any): Promise<LambdaResponse> => {
   try {
     const {
@@ -27,8 +26,25 @@ export const handler = async (event: any): Promise<LambdaResponse> => {
       amount,
     } = event as SendEthRequest
 
-    const valueInEth = amount
+    if (!address) {
+      throw new Error('Address is required')
+    }
+    if (!amount) {
+      throw new Error('Amount is required')
+    }
 
+    const parsedAmount = parseFloat(amount)
+    if (isNaN(parsedAmount)) {
+      throw new Error('Amount is not a number')
+    }
+    if (parsedAmount <= 0) {
+      throw new Error('Amount must be greater than 0')
+    }
+    if (parsedAmount > 0.001) {
+      throw new Error('Amount must be less than or equal to 0.001')
+    }
+
+    const valueInEth = parsedAmount.toString()
     const valueInWei = parseEther(valueInEth)
 
     const txnRequest = {
