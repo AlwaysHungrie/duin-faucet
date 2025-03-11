@@ -19,8 +19,9 @@ import {
   defaultLimits,
   defaultMessages,
 } from '../constants/defaultMessages'
+import axios from 'axios'
 
-const { OPENAI_API_KEY } = config
+const { OPENAI_API_KEY, AGENT_ADDRESS } = config
 
 export const getChats = async (userId: string) => {
   const limit = 5
@@ -195,6 +196,7 @@ export const addUserMessage = async (
   let attestation = ''
   let tools = ''
   let attestationWithoutTools = ''
+  let attestationHash = undefined
 
   if (chat.name === 'scorekeeper') {
     const { llm_response, attestation_url } = await executeLLM({
@@ -288,7 +290,23 @@ export const addUserMessage = async (
       attestation = attestation_url_tools
       attestationWithoutTools = attestation_url
       tools = JSON.stringify(toolsUsed)
-    }
+
+      const attestationKey = `${userDir}/${outputPrefix}.presentation.tlsn`
+
+      try {
+        const executeResponse = await axios.post(
+          `http://localhost:7048/api/v1/attestation/execute`,
+          {
+            address: AGENT_ADDRESS,
+            attestationKey,
+          }
+        )
+        console.log('executeResponse', executeResponse)
+        attestationHash = executeResponse.data.attestationHash
+      } catch (error) {
+        console.error('Error executing tools', error)
+      }
+    }    
   }
 
   if (chat.name === 'self') {
@@ -315,6 +333,7 @@ export const addUserMessage = async (
       attestation,
       tools,
       attestationWithoutTools,
+      attestationHash
     },
   })
 

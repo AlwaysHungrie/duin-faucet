@@ -70,13 +70,6 @@ export default function VerifyPage() {
     getAttestationData(`${bucketKey}/${fileKey}`)
   }, [attestation, getAttestationData, jwtToken, attestationData])
 
-  useEffect(() => {
-    if (attestationData?.recv) {
-      const recvLines = attestationData.recv.split('\r\n')
-      console.log(recvLines)
-    }
-  }, [attestationData])
-
   const renderIfJson = (json: string) => {
     try {
       const data = JSON.parse(json)

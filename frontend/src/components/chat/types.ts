@@ -22,4 +22,5 @@ export type Message = {
   timestamp: string
   attestation?: string
   tools?: string
+  attestationHash?: string
 }

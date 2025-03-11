@@ -16,7 +16,15 @@ export const formatMessageTimestamp = (timestamp: string) => {
   return date.toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })
 }
 
-const FunctionCall = ({ name, args }: { name: string; args: string }) => {
+const FunctionCall = ({
+  name,
+  args,
+  attestationHash,
+}: {
+  name: string
+  args: string
+  attestationHash: string | undefined
+}) => {
   return (
     <div className="flex flex-col gap-2 mb-4 px-4 pb-4 pt-2 bg-gray-100 rounded-lg self-center">
       <p className="font-bold">{name}</p>
@@ -25,11 +33,14 @@ const FunctionCall = ({ name, args }: { name: string; args: string }) => {
       </p>
       <CTAButton
         onClick={() => {
-          console.log('Call Function')
+          if (attestationHash) {
+            const url = `${process.env.NEXT_PUBLIC_CONSTELLA_FRONTEND_URL}/attestation?hash=${attestationHash}`
+            window.open(url, '_blank')
+          }
         }}
         className="mt-2"
       >
-        Executed With Constella
+        {attestationHash ? 'Executed With Constella' : 'Failed'}
       </CTAButton>
     </div>
   )
@@ -90,7 +101,12 @@ export default function MessageItem({ message }: { message: Message }) {
             <div className="font-bold mb-1">Agent decided to call:</div>
             {/* eslint-disable-next-line @typescript-eslint/no-explicit-any */}
             {tools.map((tool: any, index: number) => (
-              <FunctionCall key={index} name={tool.name} args={tool.args} />
+              <FunctionCall
+                key={index}
+                name={tool.name}
+                args={tool.args}
+                attestationHash={message.attestationHash}
+              />
             ))}
           </div>
         )}

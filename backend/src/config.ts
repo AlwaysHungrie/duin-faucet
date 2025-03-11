@@ -25,6 +25,11 @@ const OPENAI_API_KEY = process.env.OPENAI_API_KEY || 'openai-api-key'
 const RUST_BINARY_PATH = process.env.RUST_BINARY_PATH || '../rust_tlsn_llm/target/release/rust_tlsn_llm'
 const RUST_VERIFIER_BINARY_PATH = process.env.RUST_VERIFIER_BINARY_PATH || '../rust_tlsn_llm_verifier/target/release/rust_tlsn_llm_verifier'
 
+const AGENT_ADDRESS = process.env.AGENT_ADDRESS
+if (!AGENT_ADDRESS) {
+  throw new Error('AGENT_ADDRESS is not set')
+}
+
 export default {
   PORT,
   JWT_SECRET,
@@ -42,4 +47,5 @@ export default {
   OPENAI_API_KEY,
   RUST_BINARY_PATH,
   RUST_VERIFIER_BINARY_PATH,
+  AGENT_ADDRESS,
 }
