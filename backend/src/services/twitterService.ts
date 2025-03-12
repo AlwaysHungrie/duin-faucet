@@ -28,14 +28,13 @@ const extractTweetIdFromUrl = (url: string) => {
 
 export const retweet = async (tweetUrl: string) => {
   try {
-    return true
-    // const tweetId = extractTweetIdFromUrl(tweetUrl)
-    // if (!tweetId) {
-    //   throw new Error('Invalid tweet URL')
-    // }
-    // const user = await twitterClient.currentUserV2()
-    // const result = await twitterClient.v2.retweet(user.data.id, tweetId)
-    // return result
+    const tweetId = extractTweetIdFromUrl(tweetUrl)
+    if (!tweetId) {
+      throw new Error('Invalid tweet URL')
+    }
+    const user = await twitterClient.currentUserV2()
+    const result = await twitterClient.v2.retweet(user.data.id, tweetId)
+    return result
   } catch (error) {
     console.log(error)
     return null
