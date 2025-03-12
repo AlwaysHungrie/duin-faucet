@@ -50,7 +50,7 @@ export const handler = async (event: any): Promise<LambdaResponse> => {
     const txnRequest = {
       to: address,
       data: '',
-      value: valueInWei,
+      value: valueInWei.toString(),
       gasLimit: 1000000,
     }
     return {
