@@ -30,6 +30,8 @@ if (!AGENT_ADDRESS) {
   throw new Error('AGENT_ADDRESS is not set')
 }
 
+const CONSTELLA_URL = process.env.CONSTELLA_URL || 'https://api.constella.one/api/v1'
+
 export default {
   PORT,
   JWT_SECRET,
@@ -48,4 +50,5 @@ export default {
   RUST_BINARY_PATH,
   RUST_VERIFIER_BINARY_PATH,
   AGENT_ADDRESS,
+  CONSTELLA_URL,
 }

@@ -11,10 +11,20 @@ nvm install --lts
 sudo apt update && sudo apt install postgresql postgresql-contrib
 sudo systemctl start postgresql && sudo systemctl daemon-reload && sudo systemctl enable postgresql
 sudo -u postgres psql
-CREATE USER pg1 WITH PASSWORD 'pg1';
-CREATE DATABASE "duin-dev";
+CREATE USER pg1 WITH PASSWORD 'pg1' CREATEDB;
+CREATE DATABASE "duin-dev" WITH OWNER = pg1;
+CREATE DATABASE "duin-shadow" WITH OWNER = pg1;
+GRANT ALL PRIVILEGES ON DATABASE "duin-dev" TO pg1;
+GRANT ALL PRIVILEGES ON DATABASE "duin-shadow" TO pg1;
+\c duin-dev
+GRANT ALL ON SCHEMA public TO pg1;
+ALTER SCHEMA public OWNER TO pg1;
+\c duin-shadow
+GRANT ALL ON SCHEMA public TO pg1;
+ALTER SCHEMA public OWNER TO pg1;
+\q
 
-use DATABASE_URL="postgresql://pg1:pg1@localhost:5432/duin-dev?schema=public"
+use DATABASE_URL="postgresql://pg1:pg1@localhost:5432/duin-dev"
 
 ### Install nginx
 
@@ -84,4 +94,12 @@ pnpm run build
 
 PORT=3000 pm2 start npm --name "duin-frontend" -- start
 
+### Install backend
 
+pnpm install
+npx prisma migrate dev --name init
+npm run build
+
+PORT=3002 pm2 start dist/index.js --name "duin-backend"
+
+### Install rust

@@ -21,7 +21,7 @@ import {
 } from '../constants/defaultMessages'
 import axios from 'axios'
 
-const { OPENAI_API_KEY, AGENT_ADDRESS } = config
+const { OPENAI_API_KEY, AGENT_ADDRESS, CONSTELLA_URL } = config
 
 export const getChats = async (userId: string) => {
   const limit = 5
@@ -295,7 +295,7 @@ export const addUserMessage = async (
 
       try {
         const executeResponse = await axios.post(
-          `http://localhost:7048/api/v1/attestation/execute`,
+          `${CONSTELLA_URL}/attestation/execute`,
           {
             address: AGENT_ADDRESS,
             attestationKey,
