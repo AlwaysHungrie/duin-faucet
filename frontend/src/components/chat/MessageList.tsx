@@ -2,6 +2,7 @@ import MessageItem from './MessageItem'
 import { Loader } from 'lucide-react'
 import { Message } from './types'
 import { forwardRef } from 'react'
+import NftMessage from './NftMessage'
 
 const MessageList = forwardRef<
   {
@@ -78,9 +79,13 @@ const MessageList = forwardRef<
         </div>
       )}
 
-      {messages.map((message) => (
-        <MessageItem key={message.messageId} message={message} />
-      ))}
+      {messages.map((message) => {
+        if (message.messageId.startsWith('nft-')) {
+          return <NftMessage key={message.messageId} message={message} />
+        }
+
+        return <MessageItem key={message.messageId} message={message} />
+      })}
 
       {isTyping && (
         <div className="flex justify-start mb-4">

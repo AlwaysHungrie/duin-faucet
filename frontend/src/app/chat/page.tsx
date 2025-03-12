@@ -110,8 +110,9 @@ export default function ChatHome() {
         setIsTyping(true)
       }
 
+      let newMessageId = crypto.randomUUID()
       const newMessage: Message = {
-        messageId: crypto.randomUUID(),
+        messageId: `user-${newMessageId}`,
         content: message,
         role: 'user',
         timestamp: new Date().toISOString(),
@@ -146,11 +147,28 @@ export default function ChatHome() {
         const data = response.data
         if (data.success) {
           const responseMessage = data.responseMessage
+          const nftMessage = data.nftMessage
+
+          if (nftMessage) {
+            handleResponseMessage(
+              activeChat,
+              {
+                content: nftMessage,
+                role: 'assistant',
+                timestamp: new Date().toISOString(),
+                messageId: `nft-${newMessageId}`,
+              },
+              newMessageId
+            )
+            await new Promise((resolve) => setTimeout(resolve, 1000))
+            newMessageId = `nft-${newMessageId}`
+          }
+
           if (!responseMessage.role) return
           handleResponseMessage(
             activeChat,
             responseMessage,
-            newMessage.messageId
+            newMessageId,
           )
           setIsTyping(false)
           return

@@ -12,16 +12,37 @@ import {
   checkIfSystemPromptInRequest,
   extractAttestationUrls,
   extractMessageFromRecv,
+  extractTokenIdFromMessage,
+  extractTweetFromMessage,
 } from '../utils/userMessageUtils'
 import { executeVerifier } from './llmVerifierService'
 import {
   defaultChatNames,
   defaultLimits,
   defaultMessages,
+  towncrierMessages,
 } from '../constants/defaultMessages'
 import axios from 'axios'
+import { getLastestNft } from './nftService'
+import { retweet } from './twitterService'
 
 const { OPENAI_API_KEY, AGENT_ADDRESS, CONSTELLA_URL } = config
+
+const getRetweetMessage = (chatId: string, content: string) => {
+  return ({
+    responseMessage: {
+      messageId: new Date().getTime().toString(),
+      content,
+      role: 'assistant',
+      timestamp: new Date(),
+      chatId,
+      attestation: null,
+      tools: null,
+      attestationWithoutTools: null,
+    },
+    nftMessage: null,
+  })
+}
 
 export const getChats = async (userId: string) => {
   const limit = 5
@@ -176,27 +197,18 @@ export const addUserMessage = async (
     throw createError(400, 'Chat has no remaining messages')
   }
 
-  const userMessage = await prisma.message.create({
-    data: {
-      content: message,
-      role: 'user',
-      chatId,
-    },
-  })
-
-  await prisma.chat.update({
-    where: { chatId },
-    data: { messagesRemaining: { decrement: 1 } },
-  })
+  const messageId = new Date().getTime().toString()
 
   const userDir = 'duin'
-  const outputPrefix = `${userDir}-${userMessage.messageId}`
+  const outputPrefix = `${userDir}-${messageId}`
 
   let responseMessageContent = ''
   let attestation = ''
   let tools = ''
   let attestationWithoutTools = ''
   let attestationHash = undefined
+
+  let nftMessage = null
 
   if (chat.name === 'scorekeeper') {
     const { llm_response, attestation_url } = await executeLLM({
@@ -309,21 +321,77 @@ export const addUserMessage = async (
     }    
   }
 
+  if (chat.name === 'towncrier') {
+    // extract tokenId from message
+    const tokenId = extractTokenIdFromMessage(message)
+    if (!tokenId) {
+      return getRetweetMessage(chatId, towncrierMessages['no-token-id'])
+    }
+
+    // read on chain data for the user
+    const nftData = await getLastestNft(address, tokenId)
+    console.log('nftData', nftData)
+    if (!nftData) {
+      return getRetweetMessage(chatId, towncrierMessages['no-nft'])
+    }
+
+    const extractedTweet = extractTweetFromMessage(message)
+    if (!extractedTweet) {
+      return getRetweetMessage(chatId, towncrierMessages['no-tweet'])
+    }
+
+    const retweetResult = await retweet(extractedTweet)
+    if (!retweetResult) {
+      return getRetweetMessage(chatId, towncrierMessages['failed-retweet'])
+    }
+
+    responseMessageContent = towncrierMessages['success-retweet']
+    nftMessage = JSON.stringify(nftData)
+  }
+
   if (chat.name === 'self') {
     return {
-      messageId: new Date().getTime().toString(),
-      content: '',
-      role: '',
-      timestamp: new Date(),
-      chatId,
-      attestation: null,
-      tools: null,
-      attestationWithoutTools: null,
+      responseMessage: {
+        messageId: new Date().getTime().toString(),
+        content: '',
+        role: '',
+        timestamp: new Date(),
+        chatId,
+        attestation: null,
+        tools: null,
+        attestationWithoutTools: null,
+      },
+      nftMessage: null,
     }
   }
 
   console.log('responseMessageContent', responseMessageContent)
   console.log('attestation', attestation)
+
+  await prisma.message.create({
+    data: {
+      content: message,
+      role: 'user',
+      chatId,
+      messageId,
+    },
+  })
+
+  await prisma.chat.update({
+    where: { chatId },
+    data: { messagesRemaining: { decrement: 1 } },
+  })
+
+  if (nftMessage) {
+    await prisma.message.create({
+      data: {
+        content: nftMessage,
+        role: 'assistant',
+        chatId,
+        messageId: `nft-${new Date().getTime().toString()}`,
+      },
+    })
+  }
 
   const responseMessage = await prisma.message.create({
     data: {
@@ -337,7 +405,7 @@ export const addUserMessage = async (
     },
   })
 
-  return responseMessage
+  return { responseMessage, nftMessage }
 }
 
 export const getPreviousMessages = async (

@@ -1,12 +1,12 @@
 import { Button } from '@/components/ui/button'
-import { ArrowLeft, LucideTrash } from 'lucide-react'
+import { ArrowLeft } from 'lucide-react'
 import { Chat } from './types'
 import { formatChatName } from './chatItem'
 
 export default function ChatHeader({
   chat,
   onBackClick,
-  onClearChatClick,
+  // onClearChatClick,
 }: {
   chat: Chat
   onBackClick: () => void
@@ -37,9 +37,9 @@ export default function ChatHeader({
         <div className="ml-auto" />
       )}
 
-      <Button variant="ghost" size="icon" onClick={onClearChatClick}>
+      {/* <Button variant="ghost" size="icon" onClick={onClearChatClick}>
         <LucideTrash className="h-5 w-5 text-gray-400" />
-      </Button>
+      </Button> */}
     </div>
   )
 }

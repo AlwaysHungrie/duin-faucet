@@ -54,8 +54,8 @@ router.post(
       throw createError(400, 'Chat ID and message are required')
     }
 
-    const responseMessage = await addUserMessage(chatId, message, user.address)
-    res.json({ responseMessage, success: true })
+    const { responseMessage, nftMessage } = await addUserMessage(chatId, message, user.address)
+    res.json({ responseMessage, nftMessage, success: true })
   })
 )
 

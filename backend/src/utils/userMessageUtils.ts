@@ -85,3 +85,16 @@ export const extractMessageFromRecv = (response: string) => {
 
   return message.content
 }
+
+// https://x.com/Always_Hungrie_/status/1897558819405807745
+export const extractTweetFromMessage = (message: string) => {
+  const regex = /https:\/\/x\.com\/[^\s]+/g
+  const match = message.match(regex)
+  return match ? match[0] : null
+}
+
+export const extractTokenIdFromMessage = (message: string) => {
+  const regex = /Token ID: (\d+)/
+  const match = message.match(regex)
+  return match ? parseInt(match[1]) : null
+}

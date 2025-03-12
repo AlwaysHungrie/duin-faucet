@@ -103,3 +103,12 @@ npm run build
 PORT=3002 pm2 start dist/index.js --name "duin-backend"
 
 ### Install rust
+
+sudo apt update
+sudo apt install curl build-essential gcc make -y
+sudo apt install libssl-dev -y
+sudo apt-get install pkg-config -y
+
+
+curl --proto '=https' --tlsv1.2 -sSf https://sh.rustup.rs | sh
+source $HOME/.cargo/env
