@@ -30,7 +30,7 @@ export const defaultLimits = {
     resetTimeInHours: 24,
   },
   towncrier: {
-    messagesAllowed: 10,
+    messagesAllowed: 3,
     resetTimeInHours: 24,
   },
 } as {

@@ -15,7 +15,7 @@ export default function ChatItem({
   chat,
   isActive,
   onClick,
-  // handleDeleteUser,
+  handleDeleteUser,
   clearChats,
 }: {
   chat: Chat
@@ -106,14 +106,14 @@ export default function ChatItem({
                     Logout
                   </button>
                 )}
-                {/* {address && (
+                {address && process.env.NEXT_PUBLIC_DEV_MODE !== 'true' && (
                   <button
                     className="w-full text-left px-4 py-2 text-sm text-gray-700 hover:bg-gray-100"
                     onClick={handleDeleteUser}
                   >
                     Delete User
                   </button>
-                )} */}
+                )}
               </div>
             )}
           </div>
